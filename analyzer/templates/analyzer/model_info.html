@@ -1,0 +1,50 @@
+{% extends 'analyzer/base.html' %}
+{% block title %}Información del Modelo - CV Analyzer{% endblock %}
+{% block content %}
+    <div class="hero"><h1>Información del Modelo</h1><p>Detalles completos de la red neuronal BERT</p></div>
+    <div class="result-card">
+        <div class="result-header">
+            <div class="result-icon">📊</div>
+            <div class="result-title"><h2>Dataset de Entrenamiento</h2><div class="category">{{ total_samples }} muestras</div></div>
+        </div>
+        <div class="params-section">
+            <h3>Distribución de Datos</h3>
+            <div class="params-grid">
+                <div class="param-item"><div class="param-value">{{ total_samples }}</div><div class="param-label">Total</div></div>
+                <div class="param-item"><div class="param-value">{{ train_samples }}</div><div class="param-label">Train (80%)</div></div>
+                <div class="param-item"><div class="param-value">{{ val_samples }}</div><div class="param-label">Val (20%)</div></div>
+                <div class="param-item"><div class="param-value">{{ num_categories }}</div><div class="param-label">Categorías</div></div>
+            </div>
+        </div>
+        <div class="model-explanation">
+            <h3 class="section-title">Parámetros de Entrenamiento</h3>
+            <div class="explanation-grid">
+                <div class="explanation-box"><div class="box-icon">1</div><h4>Épocas</h4><p>{{ epochs }} épocas de entrenamiento</p></div>
+                <div class="explanation-box"><div class="box-icon">2</div><h4>Batch Size</h4><p>{{ batch_size }} muestras por batch</p></div>
+                <div class="explanation-box"><div class="box-icon">3</div><h4>Learning Rate</h4><p>{{ learning_rate }}</p></div>
+                <div class="explanation-box"><div class="box-icon">4</div><h4>Max Tokens</h4><p>{{ max_length }} tokens máximos</p></div>
+            </div>
+        </div>
+    </div>
+    <div class="result-card">
+        <div class="result-header">
+            <div class="result-icon">🧠</div>
+            <div class="result-title"><h2>Arquitectura BERT</h2><div class="category">bert-base-uncased</div></div>
+        </div>
+        <div class="params-section">
+            <h3>Parámetros de la Red</h3>
+            <div class="params-grid">
+                <div class="param-item"><div class="param-value">{{ model_params.total_params|default:"110M"|floatformat:"0" }}</div><div class="param-label">Parámetros</div></div>
+                <div class="param-item"><div class="param-value">{{ model_params.num_layers|default:"12" }}</div><div class="param-label">Capas</div></div>
+                <div class="param-item"><div class="param-value">{{ model_params.hidden_size|default:"768" }}</div><div class="param-label">Hidden</div></div>
+                <div class="param-item"><div class="param-value">{{ model_params.num_heads|default:"12" }}</div><div class="param-label">Heads</div></div>
+            </div>
+        </div>
+        <div class="why-prediction">
+            <h3 class="section-title">Categorías del Dataset</h3>
+            <div class="keywords-list">
+                {% for cat in categories %}<span class="keyword-tag">{{ cat }}</span>{% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

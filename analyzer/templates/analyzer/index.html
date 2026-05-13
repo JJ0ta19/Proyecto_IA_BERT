@@ -1,0 +1,83 @@
+{% extends 'analyzer/base.html' %}
+{% block title %}CV Analyzer{% endblock %}
+{% block content %}
+    <div class="hero">
+        <h1>CV Analyzer</h1>
+        <p>Analizador de currículums basado en red neuronal BERT</p>
+    </div>
+    {% if error %}<div class="error-message" style="background:var(--white);border:1px solid var(--black);padding:1rem;border-radius:8px;margin-bottom:1.5rem;">{{ error }}</div>{% endif %}
+    <div class="upload-card">
+        <form method="post" enctype="multipart/form-data" action="{% url 'upload_cv' %}">
+            {% csrf_token %}
+            <div class="upload-section">
+                <input type="file" id="cv-file" name="cv_file" accept=".pdf" class="file-input">
+                <label for="cv-file" class="file-label">
+                    <div class="label-content">
+                        <span class="upload-icon">+</span>
+                        <span class="upload-text">Seleccionar archivo PDF</span>
+                        <span class="upload-hint">Arrastra o haz clic</span>
+                    </div>
+                </label>
+                <div id="file-name" class="file-name-display"></div>
+            </div>
+            <button type="submit" class="submit-btn" id="submit-btn" disabled>Analizar CV</button>
+        </form>
+    </div>
+    {% if result %}
+    <div class="result-card">
+        <div class="result-header">
+            <div class="result-icon">→</div>
+            <div class="result-title"><h2>Categoría Predicha</h2><div class="category">{{ result.category }}</div></div>
+            <div class="confidence-badge"><div class="value">{{ result.confidence|floatformat:1 }}%</div><div class="label">Confianza</div></div>
+        </div>
+        <div class="params-section">
+            <h3>Parámetros de la Red Neuronal</h3>
+            <div class="params-grid">
+                <div class="param-item"><div class="param-value">{{ result.model_info.parameters.total_parameters|default:"110M"|floatformat:"0" }}</div><div class="param-label">Parámetros</div></div>
+                <div class="param-item"><div class="param-value">{{ result.model_info.parameters.num_hidden_layers|default:"12" }}</div><div class="param-label">Capas</div></div>
+                <div class="param-item"><div class="param-value">{{ result.model_info.parameters.hidden_size|default:"768" }}</div><div class="param-label">Hidden</div></div>
+                <div class="param-item"><div class="param-value">{{ result.model_info.parameters.classifier_layers|default:"42" }}</div><div class="param-label">Clases</div></div>
+            </div>
+        </div>
+        <div class="model-explanation">
+            <h3 class="section-title">Procesamiento de la Red</h3>
+            <div class="explanation-grid">
+                <div class="explanation-box"><div class="box-icon">1</div><h4>Entrada</h4><p>Texto extraído del PDF y traducido al inglés</p></div>
+                <div class="explanation-box"><div class="box-icon">2</div><h4>Tokenización</h4><p>BERT tokenizer convierte texto a tokens</p></div>
+                <div class="explanation-box"><div class="box-icon">3</div><h4>Embedding + Attention</h4><p>12 capas transformer procesan el texto</p></div>
+                <div class="explanation-box"><div class="box-icon">4</div><h4>Clasificación</h4><p>Capa fully-connected con {{ result.model_info.parameters.classifier_layers|default:"42" }} neuronas</p></div>
+                <div class="explanation-box"><div class="box-icon">5</div><h4>Predicción</h4><p>Softmax genera probabilidad por categoría</p></div>
+                <div class="explanation-box"><div class="box-icon">6</div><h4>Skills</h4><p>Análisis de palabras clave para detectar habilidades</p></div>
+            </div>
+        </div>
+        {% if result.keywords %}
+        <div class="why-prediction">
+            <h3 class="section-title">Palabras Clave Detectadas</h3>
+            <div class="keywords-list">
+                {% for word, count in result.keywords %}<span class="keyword-tag">{{ word }}</span>{% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% if result.top_3_predictions %}
+        <div class="prob-distribution">
+            <h3 class="section-title">Top 3 Predicciones</h3>
+            <div class="probability-chart">
+                {% for pred in result.top_3_predictions %}
+                <div class="prob-bar-container">
+                    <div class="prob-label">{% if forloop.first %}🥇 {% elif forloop.second %}🥈 {% else %}🥉 {% endif %}{{ pred.category }}</div>
+                    <div class="prob-bar-wrapper"><div class="prob-bar" style="width: {{ pred.probability }}%"></div></div>
+                    <div class="prob-value">{{ pred.probability|floatformat:1 }}%</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% if result.extracted_text %}
+        <div class="processed-text-section">
+            <h3>📝 Texto Procesado por la Red Neuronal</h3>
+            <div class="text-content"><pre>{{ result.extracted_text }}</pre></div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CV Analyzer{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --black: #000000; --dark-gray: #1a1a1a; --gray: #4a4a4a; --light-gray: #9a9a9a; --lighter-gray: #e5e5e5; --white: #ffffff; --off-white: #fafafa; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--off-white); min-height: 100vh; color: var(--dark-gray); line-height: 1.6; }
+        .navbar { background: var(--white); border-bottom: 1px solid var(--lighter-gray); padding: 1rem 2rem; position: sticky; top: 0; z-index: 100; }
+        .navbar-content { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-size: 1.25rem; font-weight: 600; color: var(--black); }
+        .logo-icon { width: 32px; height: 32px; background: var(--black); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--white); font-size: 1rem; }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--gray); font-weight: 500; font-size: 0.9rem; }
+        .nav-links a:hover { color: var(--black); }
+        .container { max-width: 900px; margin: 1.5rem auto; padding: 0 1.5rem; }
+        .nav-tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--lighter-gray); padding-bottom: 0.5rem; }
+        .nav-tab { padding: 0.75rem 1.5rem; text-decoration: none; color: var(--gray); font-weight: 500; font-size: 0.9rem; border-radius: 6px; }
+        .nav-tab:hover { color: var(--black); background: var(--off-white); }
+        .nav-tab.active { color: var(--white); background: var(--black); }
+        .hero { text-align: center; margin-bottom: 3rem; }
+        .hero h1 { font-size: 2rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--black); }
+        .hero p { color: var(--gray); font-size: 1rem; max-width: 500px; margin: 0 auto; }
+        .upload-card { background: var(--white); border: 1px solid var(--lighter-gray); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; }
+        .upload-section { position: relative; }
+        .file-input { position: absolute; width: 0; height: 0; opacity: 0; }
+        .file-label { display: block; border: 1px dashed var(--light-gray); border-radius: 8px; padding: 2.5rem 2rem; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--off-white); }
+        .file-label:hover { border-color: var(--black); background: var(--white); }
+        .label-content { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+        .file-label .upload-icon { font-size: 2rem; margin-bottom: 0.25rem; }
+        .file-label .upload-text { font-size: 0.95rem; font-weight: 500; color: var(--dark-gray); }
+        .file-label .upload-hint { font-size: 0.8rem; color: var(--light-gray); }
+        .file-name-display { margin-top: 1rem; padding: 0.75rem 1rem; background: var(--off-white); border-radius: 6px; color: var(--dark-gray); font-weight: 500; font-size: 0.9rem; display: none; }
+        .file-name-display.has-file { display: block; }
+        .submit-btn { width: 100%; padding: 1rem; background: var(--black); color: var(--white); border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-top: 1.5rem; }
+        .submit-btn:hover { background: var(--dark-gray); }
+        .submit-btn:disabled { background: var(--lighter-gray); color: var(--light-gray); cursor: not-allowed; }
+        .result-card { background: var(--white); border: 1px solid var(--lighter-gray); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; }
+        .result-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--lighter-gray); }
+        .result-icon { width: 48px; height: 48px; background: var(--black); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: var(--white); }
+        .result-title { flex: 1; }
+        .result-title h2 { font-size: 0.85rem; color: var(--light-gray); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+        .result-title .category { font-size: 1.5rem; font-weight: 600; color: var(--black); }
+        .confidence-badge { background: var(--off-white); padding: 0.5rem 1rem; border-radius: 6px; text-align: center; border: 1px solid var(--lighter-gray); }
+        .confidence-badge .value { font-size: 1.25rem; font-weight: 600; color: var(--black); }
+        .confidence-badge .label { font-size: 0.7rem; color: var(--light-gray); text-transform: uppercase; }
+        .section-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; color: var(--black); }
+        .params-section { margin-top: 1.5rem; padding: 1.5rem; background: var(--black); border-radius: 8px; color: var(--white); }
+        .params-section h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; color: var(--white); }
+        .params-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+        .param-item { text-align: center; }
+        .param-item .param-value { font-size: 1.25rem; font-weight: 600; }
+        .param-item .param-label { font-size: 0.7rem; color: var(--lighter-gray); text-transform: uppercase; margin-top: 0.25rem; }
+        .model-explanation { margin-top: 1.5rem; padding: 1.5rem; background: var(--off-white); border-radius: 8px; border: 1px solid var(--lighter-gray); }
+        .explanation-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+        .explanation-box { background: var(--white); padding: 1rem; border-radius: 6px; border: 1px solid var(--lighter-gray); }
+        .explanation-box .box-icon { font-size: 1.25rem; margin-bottom: 0.5rem; }
+        .explanation-box h4 { font-size: 0.8rem; font-weight: 600; color: var(--black); margin-bottom: 0.5rem; }
+        .explanation-box p { font-size: 0.75rem; color: var(--gray); }
+        .processed-text-section { margin-top: 2rem; padding: 0; background: var(--white); border: 2px solid var(--black); border-radius: 12px; overflow: hidden; }
+        .processed-text-section h3 { background: var(--black); color: var(--white); padding: 1rem 1.5rem; margin: 0; font-size: 1rem; }
+        .processed-text-section .text-content { padding: 1.5rem; }
+        .processed-text-section pre { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; line-height: 1.7; color: var(--dark-gray); background: var(--off-white); padding: 1.5rem; border-radius: 8px; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        .why-prediction { margin-top: 1.5rem; padding: 1.5rem; background: var(--off-white); border-radius: 8px; border: 1px solid var(--lighter-gray); }
+        .keywords-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .keyword-tag { background: var(--white); padding: 0.375rem 0.75rem; border-radius: 4px; font-size: 0.8rem; font-weight: 500; color: var(--dark-gray); border: 1px solid var(--lighter-gray); }
+        .prob-distribution { margin-top: 1.5rem; padding: 1.5rem; background: var(--off-white); border-radius: 8px; border: 1px solid var(--lighter-gray); }
+        .probability-chart { display: flex; flex-direction: column; gap: 0.5rem; }
+        .prob-bar-container { display: flex; align-items: center; gap: 1rem; }
+        .prob-label { width: 160px; font-size: 0.75rem; color: var(--dark-gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .prob-bar-wrapper { flex: 1; height: 20px; background: var(--lighter-gray); border-radius: 3px; }
+        .prob-bar { height: 100%; background: var(--black); }
+        .prob-value { width: 50px; text-align: right; font-weight: 600; font-size: 0.8rem; }
+        .skills-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem; }
+        .skill-category { background: var(--off-white); border-radius: 8px; padding: 1rem; border: 1px solid var(--lighter-gray); }
+        .skill-category h4 { font-size: 0.75rem; color: var(--light-gray); margin-bottom: 0.75rem; text-transform: uppercase; }
+        .skill-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+        .skill-tag { background: var(--white); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; border: 1px solid var(--lighter-gray); }
+        footer { text-align: center; padding: 2rem; color: var(--light-gray); font-size: 0.8rem; border-top: 1px solid var(--lighter-gray); margin-top: 3rem; }
+        @media (max-width: 768px) { .explanation-grid, .params-grid, .skills-grid { grid-template-columns: 1fr; } }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo"><div class="logo-icon">A</div><span>CV Analyzer</span></div>
+            <ul class="nav-links">
+                <li><a href="/">Inicio</a></li>
+                <li><a href="{% url 'analyze_pdf' %}">Analizar PDF</a></li>
+                <li><a href="{% url 'model_info' %}">Modelo</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="nav-tabs">
+            <a href="/" class="nav-tab {% if request.path == '/' %}active{% endif %}">Inicio</a>
+            <a href="{% url 'analyze_pdf' %}" class="nav-tab {% if request.path == '/analizar/' %}active{% endif %}">Analizar PDF</a>
+            <a href="{% url 'model_info' %}" class="nav-tab {% if request.path == '/modelo/' %}active{% endif %}">Información del Modelo</a>
+        </div>
+        {% block content %}{% endblock %}
+    </div>
+    <footer><p>CV Analyzer — Powered by BERT Neural Network</p></footer>
+    <script>
+        const fileInput = document.getElementById('cv-file');
+        const fileNameDisplay = document.getElementById('file-name');
+        const submitBtn = document.getElementById('submit-btn');
+        fileInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || '';
+            if (fileName) { fileNameDisplay.textContent = fileName; fileNameDisplay.classList.add('has-file'); submitBtn.disabled = false; }
+            else { fileNameDisplay.textContent = ''; fileNameDisplay.classList.remove('has-file'); submitBtn.disabled = true; }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

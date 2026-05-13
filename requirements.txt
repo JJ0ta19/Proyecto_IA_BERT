@@ -1,0 +1,13 @@
+torch>=2.0.0
+transformers>=4.30.0
+sentence-transformers>=2.2.0
+pandas>=1.5.0
+scikit-learn>=1.2.0
+numpy>=1.23.0
+spacy>=3.5.0
+faiss-cpu>=1.7.0
+pymupdf>=1.22.0
+tqdm>=4.65.0
+Django>=4.2
+python-dotenv>=1.0.0
+deep-translator>=1.11.0
