@@ -1,0 +1,99 @@
+{% extends 'analyzer/base.html' %}
+{% block title %}CV Analyzer{% endblock %}
+{% block content %}
+    <div class="hero">
+        <h1>CV Analyzer</h1>
+        <p>Analizador de currículums basado en red neuronal BERT</p>
+    </div>
+    {% if error %}<div class="error-message" style="background:var(--white);border:1px solid var(--black);padding:1rem;border-radius:8px;margin-bottom:1.5rem;">{{ error }}</div>{% endif %}
+    <div class="upload-card">
+        <form method="post" enctype="multipart/form-data" action="{% url 'upload_cv' %}">
+            {% csrf_token %}
+            <div class="upload-section">
+                <input type="file" id="cv-file" name="cv_file" accept=".pdf" class="file-input">
+                <label for="cv-file" class="file-label">
+                    <div class="label-content">
+                        <span class="upload-icon">+</span>
+                        <span class="upload-text">Seleccionar archivo PDF</span>
+                        <span class="upload-hint">Arrastra o haz clic</span>
+                    </div>
+                </label>
+                <div id="file-name" class="file-name-display"></div>
+            </div>
+            <button type="submit" class="submit-btn" id="submit-btn" disabled>Analizar CV</button>
+        </form>
+    </div>
+    {% if result %}
+    <div class="result-card">
+        <div class="result-header">
+            <div class="result-icon">→</div>
+            <div class="result-title"><h2>Job Role Predicho</h2><div class="category">{{ result.job_role }}</div></div>
+            <div class="confidence-badge"><div class="value">{{ result.confidence|floatformat:1 }}%</div><div class="label">Confianza</div></div>
+        </div>
+        
+        <div class="params-section">
+            <h3>Resultados del Análisis</h3>
+            <div class="params-grid">
+                <div class="param-item"><div class="param-value">{{ result.job_role|default:"-" }}</div><div class="param-label">Job Role</div></div>
+                <div class="param-item"><div class="param-value">{{ result.category|default:"-" }}</div><div class="param-label">Category</div></div>
+                <div class="param-item"><div class="param-value">{{ result.education|default:"Not specified" }}</div><div class="param-label">Education</div></div>
+                <div class="param-item"><div class="param-value">{{ result.experience_years|default:0 }} años</div><div class="param-label">Experience</div></div>
+            </div>
+        </div>
+        
+        {% if result.skills %}
+        <div class="why-prediction">
+            <h3 class="section-title">Skills Detectados</h3>
+            <div class="keywords-list">
+                {% for skill_type, skill_list in result.skills.items %}
+                    {% for skill in skill_list %}
+                    <span class="keyword-tag">{{ skill }}</span>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="params-section">
+            <h3>Parámetros de la Red Neuronal</h3>
+            <div class="params-grid">
+                <div class="param-item"><div class="param-value">{{ result.model_info.parameters.total_parameters|default:"110M"|floatformat:"0" }}</div><div class="param-label">Parámetros</div></div>
+                <div class="param-item"><div class="param-value">{{ result.model_info.parameters.num_hidden_layers|default:"12" }}</div><div class="param-label">Capas</div></div>
+                <div class="param-item"><div class="param-value">{{ result.model_info.parameters.hidden_size|default:"768" }}</div><div class="param-label">Hidden</div></div>
+                <div class="param-item"><div class="param-value">{{ result.model_info.num_job_roles|default:"324" }}</div><div class="param-label">Job Roles</div></div>
+            </div>
+        </div>
+        
+        {% if result.keywords %}
+        <div class="why-prediction">
+            <h3 class="section-title">Palabras Clave Detectadas</h3>
+            <div class="keywords-list">
+                {% for word, count in result.keywords %}<span class="keyword-tag">{{ word }}</span>{% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if top_categories %}
+        <div class="prob-distribution">
+            <h3 class="section-title">Top 3 Predicciones</h3>
+            <div class="probability-chart">
+                {% for pred in top_categories %}
+                <div class="prob-bar-container">
+                    <div class="prob-label">{% if forloop.first %}🥇 {% elif forloop.second %}🥈 {% else %}🥉 {% endif %}{{ pred.job_role }}</div>
+                    <div class="prob-bar-wrapper"><div class="prob-bar" style="width: {{ pred.probability }}%"></div></div>
+                    <div class="prob-value">{{ pred.probability|floatformat:1 }}%</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if result.extracted_text %}
+        <div class="processed-text-section">
+            <h3>📝 Texto Procesado por la Red Neuronal</h3>
+            <div class="text-content"><pre>{{ result.extracted_text }}</pre></div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}
