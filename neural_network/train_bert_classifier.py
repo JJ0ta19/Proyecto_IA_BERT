@@ -7,8 +7,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
+def validate_gpu():
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA no disponible. Se requiere GPU NVIDIA para entrenar. Instala CUDA o verifica tu GPU.")
+    print(f"GPU detectada: {torch.cuda.get_device_name(0)}")
+    print(f"Memoria GPU: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
+    return torch.device("cuda")
+
+device = validate_gpu()
+print(f"Dispositivo seleccionado: {device}")
 
 import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -144,6 +151,7 @@ def main():
         val_accuracy = evaluate(model, val_loader, device)
         print(f"Validation accuracy: {val_accuracy:.4f}")
 
+    os.makedirs('models', exist_ok=True)
     print("\nSaving model...")
     torch.save(model.state_dict(), 'models/bert_classifier.pt')
     torch.save(label_encoder, 'models/label_encoder.pkl')

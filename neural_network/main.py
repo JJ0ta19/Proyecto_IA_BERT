@@ -20,8 +20,13 @@ from src.config_utils.config import OUTPUT_DIR, CHECKPOINT_DIR
 
 class ResumeAnalysisSystem:
     def __init__(self, use_gpu: bool = True):
-        self.device = "cuda" if use_gpu and os.name != "nt" else "cpu"
+        import torch
+        if use_gpu and not torch.cuda.is_available():
+            raise RuntimeError("CUDA no disponible. Se requiere GPU NVIDIA. Instala CUDA o verifica tu GPU.")
+        self.device = torch.device("cuda" if use_gpu else "cpu")
         print(f"Initializing system on device: {self.device}")
+        if use_gpu:
+            print(f"GPU: {torch.cuda.get_device_name(0)}")
 
         self.text_cleaner = TextCleaner()
         self.skill_extractor = None

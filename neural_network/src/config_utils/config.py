@@ -2,7 +2,7 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-DATASET_DIR = os.path.join(BASE_DIR, "..", "..", "data")
+DATASET_DIR = "D:/UNIVERSIDAD 2026A/PROYECTO IA/final/Proyecto_IA_BERT/data"
 
 DATASET_PATHS = {
     "1_resume_classification_training": os.path.join(DATASET_DIR, "1_resume_classification", "training_data.csv"),
@@ -23,7 +23,13 @@ NUM_WORKERS = 4
 BERT_MODEL = "bert-base-uncased"
 SENTENCE_TRANSFORMER_MODEL = "all-MiniLM-L6-v2"
 
-DEVICE = "cuda" if __name__ != "__main__" else "cpu"
+import torch
+
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+if torch.cuda.is_available():
+    print(f"[CONFIG] GPU: {torch.cuda.get_device_name(0)}")
+else:
+    print("[CONFIG] GPU no disponible - usando CPU")
 
 RANDOM_SEED = 42
 

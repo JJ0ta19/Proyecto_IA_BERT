@@ -59,7 +59,6 @@ class TextCleaner:
 
     def _remove_special_chars(self, text: str) -> str:
         text = re.sub(r'[^a-zA-Z0-9\s]', ' ', text)
-        text = re.sub(r'\d+', ' ', text)
         return text
 
     def _normalize_whitespace(self, text: str) -> str:

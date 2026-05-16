@@ -28,11 +28,11 @@ def load_or_train():
     # Verificar si existe modelo guardado
     if os.path.exists(MODEL_PATH):
         print("✅ Cargando modelo guardado...")
-        classifier = BertClassifierModel(num_classes=num_classes, device='cpu')
+        classifier = BertClassifierModel(num_classes=num_classes, device='cuda')
         classifier.load_model(MODEL_PATH)
     else:
         print("⚠️ No hay modelo guardado. Entrenando...")
-        classifier = BertClassifierModel(num_classes=num_classes, device='cpu')
+        classifier = BertClassifierModel(num_classes=num_classes, device='cuda')
         classifier.train(
             train_texts, train_labels,
             val_texts, val_labels,

@@ -24,7 +24,7 @@ print(f"   Categorías: {len(label_mapping)}")
 
 print("\n3. Entrenando clasificador (1 época para probar)...")
 num_classes = len(label_mapping)
-classifier = BertClassifierModel(num_classes=num_classes, device='cpu')
+classifier = BertClassifierModel(num_classes=num_classes, device='cuda')
 classifier.train(
     train_texts[:100], train_labels[:100],  # Solo 100 samples para probar
     val_texts[:20], val_labels[:20],
