@@ -76,7 +76,7 @@ class ResumeAnalysisSystem:
             val_texts, val_labels,
             epochs=epochs,
             batch_size=batch_size,
-            save_path=os.path.join(CHECKPOINT_DIR, "bert_classifier.pt")
+            save_path=os.path.join(CHECKPOINT_DIR, "bert_classifier_category.pt")
         )
 
     def fit_matcher(self, jobs_df):

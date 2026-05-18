@@ -148,7 +148,7 @@ class BertClassifierModel:
                 attention_mask = batch['attention_mask'].to(self.device)
 
                 outputs = self.model(input_ids, attention_mask)
-                probs = torch.softmax(outputs.logits, dim=1)
+                probs = torch.softmax(outputs, dim=1)
                 all_probs.append(probs.cpu().numpy())
 
         return np.vstack(all_probs)

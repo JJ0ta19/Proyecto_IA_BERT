@@ -10,7 +10,7 @@ from src.datasets.data_loader import DatasetLoader
 from src.datasets.preprocessor import DatasetPreprocessor
 from src.models.bert_classifier import BertClassifierModel
 
-MODEL_PATH = 'models/bert_classifier.pt'
+MODEL_PATH = 'models/bert_classifier_category.pt'
 
 def load_or_train():
     # Cargar datasets
@@ -24,6 +24,12 @@ def load_or_train():
     train_texts, val_texts, train_labels, val_labels = preprocessor.prepare_for_bert(texts, labels, val_size=0.2)
     label_mapping, reverse_mapping = preprocessor.get_label_mapping()
     num_classes = len(label_mapping)
+
+    # Verificar/crear carpeta models
+    models_dir = os.path.dirname(MODEL_PATH)
+    if models_dir and not os.path.exists(models_dir):
+        os.makedirs(models_dir)
+        print(f"📁 Carpeta '{models_dir}' creada.")
 
     # Verificar si existe modelo guardado
     if os.path.exists(MODEL_PATH):

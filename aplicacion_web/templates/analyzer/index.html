@@ -1,0 +1,150 @@
+{% extends 'analyzer/base.html' %}
+{% block title %}CV Analyzer{% endblock %}
+{% block content %}
+    <div class="hero">
+        <h1>CV Analyzer</h1>
+        <p>Analizador de currículums basado en red neuronal BERT</p>
+    </div>
+    {% if error %}<div class="error-message" style="background:var(--white);border:1px solid var(--black);padding:1rem;border-radius:8px;margin-bottom:1.5rem;">{{ error }}</div>{% endif %}
+    <div class="upload-card">
+        <form method="post" enctype="multipart/form-data" action="{% url 'upload_cv' %}">
+            {% csrf_token %}
+            <div class="upload-section">
+                <input type="file" id="cv-file" name="cv_file" accept=".pdf" class="file-input">
+                <label for="cv-file" class="file-label">
+                    <div class="label-content">
+                        <span class="upload-icon">+</span>
+                        <span class="upload-text">Seleccionar archivo PDF</span>
+                        <span class="upload-hint">Arrastra o haz clic</span>
+                    </div>
+                </label>
+                <div id="file-name" class="file-name-display"></div>
+            </div>
+            <button type="submit" class="submit-btn" id="submit-btn" disabled>Analizar CV</button>
+        </form>
+    </div>
+    {% if result %}
+    <div class="result-card">
+        <div class="result-header">
+            <div class="result-icon">→</div>
+            <div class="result-title"><h2>Categoría Predicha</h2><div class="category">{{ result.category }}</div></div>
+            <div class="confidence-badge"><div class="value">{{ result.confidence|floatformat:1 }}%</div><div class="label">Confianza</div></div>
+        </div>
+        <div class="params-section">
+            <h3>Parámetros de la Red Neuronal</h3>
+            <div class="params-grid">
+                <div class="param-item"><div class="param-value">{{ result.model_info.parameters.total_parameters|default:"110M"|floatformat:"0" }}</div><div class="param-label">Parámetros</div></div>
+                <div class="param-item"><div class="param-value">{{ result.model_info.parameters.num_hidden_layers|default:"12" }}</div><div class="param-label">Capas</div></div>
+                <div class="param-item"><div class="param-value">{{ result.model_info.parameters.hidden_size|default:"768" }}</div><div class="param-label">Hidden</div></div>
+                <div class="param-item"><div class="param-value">{{ result.model_info.parameters.classifier_layers|default:"42" }}</div><div class="param-label">Clases</div></div>
+            </div>
+        </div>
+        <div class="model-explanation">
+            <h3 class="section-title">Procesamiento de la Red</h3>
+            <div class="explanation-grid">
+                <div class="explanation-box"><div class="box-icon">1</div><h4>Entrada</h4><p>Texto extraído del PDF y traducido al inglés</p></div>
+                <div class="explanation-box"><div class="box-icon">2</div><h4>Tokenización</h4><p>BERT tokenizer convierte texto a tokens</p></div>
+                <div class="explanation-box"><div class="box-icon">3</div><h4>Embedding + Attention</h4><p>12 capas transformer procesan el texto</p></div>
+                <div class="explanation-box"><div class="box-icon">4</div><h4>Clasificación</h4><p>Capa fully-connected con {{ result.model_info.parameters.classifier_layers|default:"42" }} neuronas</p></div>
+                <div class="explanation-box"><div class="box-icon">5</div><h4>Predicción</h4><p>Softmax genera probabilidad por categoría</p></div>
+                <div class="explanation-box"><div class="box-icon">6</div><h4>Skills</h4><p>Análisis de palabras clave para detectar habilidades</p></div>
+            </div>
+        </div>
+        {% if result.keywords %}
+        <div class="why-prediction">
+            <h3 class="section-title">Palabras Clave Detectadas</h3>
+            <div class="keywords-list">
+                {% for word in result.keywords %}<span class="keyword-tag">{{ word }}</span>{% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% if result.top_3_predictions %}
+        <div class="prob-distribution">
+            <h3 class="section-title">Top 3 Predicciones</h3>
+            <div class="probability-chart">
+                {% for pred in result.top_3_predictions %}
+                <div class="prob-bar-container">
+                    <div class="prob-label">{% if forloop.first %}🥇 {% elif forloop.second %}🥈 {% else %}🥉 {% endif %}{{ pred.category }}</div>
+                    <div class="prob-bar-wrapper"><div class="prob-bar" style="width: {{ pred.probability }}%"></div></div>
+                    <div class="prob-value">{{ pred.probability|floatformat:1 }}%</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        <div class="processed-text-section">
+            <h3>📄 Pipeline de Procesamiento de Texto</h3>
+            <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;">
+                <button onclick="showTextTab('extracted')" class="submit-btn" style="padding:8px 16px;font-size:14px;">1. PDF Extraído</button>
+                <button onclick="showTextTab('preprocessed')" class="submit-btn" style="padding:8px 16px;font-size:14px;">2. Preprocesado</button>
+                <button onclick="showTextTab('ner')" class="submit-btn" style="padding:8px 16px;font-size:14px;">3. NER</button>
+                <button onclick="showTextTab('sections')" class="submit-btn" style="padding:8px 16px;font-size:14px;">4. Secciones</button>
+                <button onclick="showTextTab('model')" class="submit-btn" style="padding:8px 16px;font-size:14px;">5. Modelo</button>
+            </div>
+            <div id="text-extracted" class="text-tab" style="display:none;">
+                <h4>📄 Texto Extraído del PDF (OCR)</h4>
+                <div class="text-content"><pre>{{ result.text_extracted }}</pre></div>
+            </div>
+            <div id="text-preprocessed" class="text-tab" style="display:none;">
+                <h4>🔧 Texto Preprocesado (Traducción + Limpieza + Lemmatización)</h4>
+                <div class="text-content"><pre>{{ result.text_preprocessed }}</pre></div>
+            </div>
+            <div id="text-ner" class="text-tab" style="display:none;">
+                <h4>🏷️ Named Entity Recognition (NER)</h4>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
+                    {% if result.nlp_entities.PERSON %}
+                    <div style="background:#f0f0f0;padding:10px;border-radius:8px;">
+                        <strong>👤 Personas:</strong><br>
+                        {% for e in result.nlp_entities.PERSON %}<span class="keyword-tag">{{ e }}</span>{% endfor %}
+                    </div>{% endif %}
+                    {% if result.nlp_entities.ORG %}
+                    <div style="background:#e8f4e8;padding:10px;border-radius:8px;">
+                        <strong>🏢 Organizaciones:</strong><br>
+                        {% for e in result.nlp_entities.ORG %}<span class="keyword-tag">{{ e }}</span>{% endfor %}
+                    </div>{% endif %}
+                    {% if result.nlp_entities.TECH %}
+                    <div style="background:#e8e8f4;padding:10px;border-radius:8px;">
+                        <strong>💻 Tecnologías:</strong><br>
+                        {% for e in result.nlp_entities.TECH %}<span class="keyword-tag">{{ e }}</span>{% endfor %}
+                    </div>{% endif %}
+                    {% if result.nlp_entities.EDUCATION %}
+                    <div style="background:#fff4e6;padding:10px;border-radius:8px;">
+                        <strong>🎓 Educación:</strong><br>
+                        {% for e in result.nlp_entities.EDUCATION %}{{ e|truncatechars:100 }}<br>{% endfor %}
+                    </div>{% endif %}
+                    {% if result.skills_from_ner %}
+                    <div style="background:#e6f4e6;padding:10px;border-radius:8px;">
+                        <strong>🛠️ Skills Detectados:</strong><br>
+                        {% for s in result.skills_from_ner %}<span class="skill-tag" style="background:#4CAF50;color:white;">{{ s }}</span>{% endfor %}
+                    </div>{% endif %}
+                </div>
+            </div>
+            <div id="text-sections" class="text-tab" style="display:none;">
+                <h4>📑 Secciones del CV</h4>
+                {% for key, value in result.nlp_sections.items %}
+                {% if value %}
+                <div style="margin-bottom:15px;padding:10px;background:#f9f9f9;border-radius:8px;">
+                    <strong style="text-transform:uppercase;">{{ key }}:</strong>
+                    <pre style="white-space:pre-wrap;font-size:12px;">{{ value|truncatechars:500 }}</pre>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div id="text-model" class="text-tab" style="display:block;">
+                <h4>🧠 Texto para el Modelo (BERT - 512 tokens)</h4>
+                <div class="text-content"><pre>{{ result.text_for_model }}</pre></div>
+            </div>
+        </div>
+        <script>
+        function showTextTab(tab) {
+            document.getElementById('text-extracted').style.display = 'none';
+            document.getElementById('text-preprocessed').style.display = 'none';
+            document.getElementById('text-ner').style.display = 'none';
+            document.getElementById('text-sections').style.display = 'none';
+            document.getElementById('text-model').style.display = 'none';
+            document.getElementById('text-' + tab).style.display = 'block';
+        }
+        </script>
+    </div>
+    {% endif %}
+{% endblock %}
