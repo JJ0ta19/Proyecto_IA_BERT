@@ -90,7 +90,6 @@
             <div class="logo"><div class="logo-icon">A</div><span>CV Analyzer</span></div>
             <ul class="nav-links">
                 <li><a href="/">Inicio</a></li>
-                <li><a href="{% url 'analyze_pdf' %}">Analizar PDF</a></li>
                 <li><a href="{% url 'model_info' %}">Modelo</a></li>
             </ul>
         </div>
@@ -98,7 +97,6 @@
     <div class="container">
         <div class="nav-tabs">
             <a href="/" class="nav-tab {% if request.path == '/' %}active{% endif %}">Inicio</a>
-            <a href="{% url 'analyze_pdf' %}" class="nav-tab {% if request.path == '/analizar/' %}active{% endif %}">Analizar PDF</a>
             <a href="{% url 'model_info' %}" class="nav-tab {% if request.path == '/modelo/' %}active{% endif %}">Información del Modelo</a>
         </div>
         {% block content %}{% endblock %}

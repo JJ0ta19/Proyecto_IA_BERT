@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: cv-bert-analyzer
+    env: python
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: gunicorn proyecto_cv.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+      - key: DJANGO_SETTINGS_MODULE
+        value: proyecto_cv.settings
+    disk:
+      mountedPath: /opt/render/project/src
+      size: 512
