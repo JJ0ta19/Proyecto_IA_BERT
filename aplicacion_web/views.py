@@ -30,14 +30,15 @@ sys.path.insert(0, os.path.join(settings.BASE_DIR, 'red_neuronal'))
 
 # ====================================================================
 # IMPORTS - MÓDULOS PROPIOS DEL PROYECTO
+# NOTA: Los imports de modelos se hacen lazy (dentro de funciones) para evitar
+#       que PyTorch cargue al inicio y consuma toda la memoria en producción
 # ====================================================================
 
-from src.models.bert_classifier import BertClassifierModel  # Modelo BERT para clasificación
-from src.preprocessing.text_cleaner import TextCleaner       # Limpiador de texto
-from src.preprocessing.skill_extractor import SkillExtractor  # Extractor de habilidades
-from src.preprocessing.nlp_processor import get_nlp_processor  # Pipeline NLP completo (NER, lemmatización)
-from src.datasets.data_loader import DatasetLoader          # Cargador de datasets
-from src.datasets.preprocessor import DatasetPreprocessor    # Preprocesador de datos
+# Estos imports se hacen dentro de las funciones para evitar consumo de memoria al inicio
+# from src.models.bert_classifier import BertClassifierModel
+# from src.preprocessing.text_cleaner import TextCleaner
+# from src.preprocessing.skill_extractor import SkillExtractor
+# from src.preprocessing.nlp_processor import get_nlp_processor
 
 import pytesseract                # OCR - reconocimiento óptico de caracteres
 from PIL import Image             # Pillow - procesamiento de imágenes
@@ -48,7 +49,12 @@ from PIL import Image             # Pillow - procesamiento de imágenes
 
 # Path al ejecutable de Tesseract (motor de OCR)
 # IMPORTANTE: Tesseract debe estar instalado en el sistema
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# En Windows usar path local, en Linux/Render usar valor por defecto del sistema
+import platform
+if platform.system() == 'Windows':
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+else:
+    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
 
 # ====================================================================
 # RUTAS Y CONSTANTES
@@ -122,29 +128,25 @@ reverse_mapping = None
 def load_mappings():
     """
     Carga el mapeo de categorías del dataset.
-    
-    Proceso:
-    1. Carga el dataset completo usando DatasetLoader
-    2. Extrae los textos y etiquetas (categorías)
-    3. Genera los mapeos usando DatasetPreprocessor
-    
-    Returns:
-        label_mapping (dict): categoría -> índice
-        reverse_mapping (dict): índice -> categoría
+    Los imports se hacen aquí (lazy loading) para evitar cargar spacy/transformers al inicio.
     """
     global label_mapping, reverse_mapping
     if label_mapping is None:
+        # Imports lazy para evitar cargar librerías pesadas al inicio
+        from src.datasets.data_loader import DatasetLoader
+        from src.datasets.preprocessor import DatasetPreprocessor
+
         # DatasetLoader carga el dataset de entrenamiento
         loader = DatasetLoader()
         df = loader.load_training_data()
-        
+
         # DatasetPreprocessor prepara los datos para BERT
         preprocessor = DatasetPreprocessor()
         texts, labels = preprocessor.prepare_classification_data(df, "Resume Text", "Category")
-        
+
         # Generar mapeos: categoría <-> índice numérico
         label_mapping, reverse_mapping = preprocessor.get_label_mapping()
-    
+
     return label_mapping, reverse_mapping
 
 
@@ -154,29 +156,26 @@ def load_mappings():
 def load_classifier():
     """
     Carga el modelo BERT una única vez (Singleton).
-    
-    Proceso:
-    1. Obtiene el número de clases del dataset
-    2. Crea una instancia de BertClassifierModel
-    3. Si existe el archivo .pt, carga los pesos del modelo entrenado
-    
-    Returns:
-        BertClassifierModel: Instancia del modelo cargado
+    IMPORTANTE: Los imports se hacen aquí (lazy loading) para evitar que PyTorch
+    se cargue al inicio ycause problemas de memoria en producción.
     """
     global classifier
     if classifier is None:
+        # Importar aquí (lazy) para evitar cargar PyTorch al inicio
+        from src.models.bert_classifier import BertClassifierModel
+
         # Verificar y descargar modelo si no existe
         if not ensure_model_exists():
             print("✗ ERROR: No se pudo obtener el modelo. La aplicación no funcionará correctamente.")
-        
+
         # Obtener número de categorías (e.g., 42)
         label_map, reverse_map = load_mappings()
         num_classes = len(label_map)
-        
+
         # Crear modelo con 42 clases de salida, usando CPU
         classifier = BertClassifierModel(num_classes=num_classes, device='cpu')
         classifier.model_loaded = False
-        
+
         # Cargar pesos entrenados si existen
         if os.path.exists(MODEL_PATH):
             classifier.load_model(MODEL_PATH)
@@ -187,7 +186,7 @@ def load_classifier():
         else:
             print(f"✗ ADVERTENCIA: Modelo no encontrado en: {MODEL_PATH}")
             print(f"  - El modelo usará pesos aleatorios (sin entrenamiento)")
-    
+
     return classifier
 
 
@@ -405,41 +404,23 @@ def get_dataset_info():
 def predict_category(text, classifier):
     """
     Función principal de predicción.
-    
-    Pipeline completo:
-    1. Traducción al inglés
-    2. Procesamiento NLP (NER, lemmatización, extracción de secciones)
-    3. Extracción de secciones relevantes (experience, education, skills, projects)
-    4. Enriquecimiento con entidades detectadas (tech, keywords, companies)
-    5. Limpieza de texto
-    6. Tokenización y paso por BERT
-    7. Obtención de probabilidades
-    8. Extracción de skills adicionales
-    
-    Args:
-        text: texto extraído del PDF
-        classifier: instancia de BertClassifierModel
-    
-    Returns:
-        dict: resultados de la predicción
-        list: top 10 predicciones con probabilidades
-    
-    Dependencias:
-        - transformers: tokenización y modelo BERT
-        - torch: inferencia y softmax
-        - spacy: NER y procesamiento de texto
-        - TextCleaner: limpieza de texto
+    Los imports se hacen aquí (lazy loading) para evitar cargar PyTorch al inicio.
     """
+    # Imports lazy para evitar cargar PyTorch al inicio de la app
+    from src.preprocessing.text_cleaner import TextCleaner
+    from src.preprocessing.skill_extractor import SkillExtractor
+    from src.preprocessing.nlp_processor import get_nlp_processor
+
     # Cargar mapeos de categorías
     label_map, reverse_map = load_mappings()
     dataset_info = get_dataset_info()
-    
+
     if not text or len(text.strip()) < 10:
         return None, []
 
     # Paso 1: Traducir al inglés
     text_en = translate_to_english(text)
-    
+
     # Paso 2: Procesamiento NLP completo (NER, lemmatización, etc.)
     print("Procesando NLP...")
     nlp = get_nlp_processor()
