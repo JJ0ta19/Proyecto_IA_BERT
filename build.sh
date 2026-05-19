@@ -10,23 +10,23 @@ rm -rf /opt/render/project/src/.venv
 
 # 1. Actualizar pip (con --break-system-packages para entornos externos)
 echo "1. Actualizando pip..."
-pip install --upgrade pip --break-system-packages
+pip3 install --upgrade pip --break-system-packages
 
 # 2. Instalar torch primero (sin CUDA para evitar problemas)
 echo "2. Instalando torch CPU-only..."
-pip install torch --index-url https://download.pytorch.org/whl/cpu --break-system-packages
+pip3 install torch --index-url https://download.pytorch.org/whl/cpu --break-system-packages
 
 # 3. Instalar transformers (versión específica compatible)
 echo "3. Instalando transformers..."
-pip install 'transformers>=4.30.0,<4.40.0' --break-system-packages
+pip3 install 'transformers>=4.30.0,<4.40.0' --break-system-packages
 
 # 4. Instalar el resto de dependencias
 echo "4. Instalando dependencias..."
-pip install -r requirements.txt --break-system-packages
+pip3 install -r requirements.txt --break-system-packages
 
 # 5. Descargar modelo spaCy
 echo "5. Descargando modelo spaCy..."
-python -m spacy download en_core_web_sm --break-system-packages
+python3 -m spacy download en_core_web_sm --break-system-packages
 
 # 6. Crear directorio para el modelo
 echo "6. Preparando directorio del modelo..."
@@ -35,7 +35,7 @@ mkdir -p red_neuronal/models
 # 7. Descargar modelo BERT desde Google Drive
 echo "7. Descargando modelo BERT..."
 
-python -c "
+python3 -c "
 import gdown
 import os
 
@@ -52,10 +52,10 @@ ls -lh red_neuronal/models/
 
 # 9. Recolectar archivos estáticos
 echo "9. Recolectando archivos estáticos..."
-python manage.py collectstatic --noinput
+python3 manage.py collectstatic --noinput
 
 # 10. Ejecutar migraciones de base de datos
 echo "10. Ejecutando migraciones..."
-python manage.py migrate
+python3 manage.py migrate
 
 echo "=== BUILD COMPLETADO ==="
