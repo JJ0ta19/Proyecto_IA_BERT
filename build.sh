@@ -4,9 +4,9 @@ set -o errexit
 
 echo "=== INICIANDO BUILD PARA RENDER ==="
 
-# 0. Limpiar cache de pip para evitar conflictos
-echo "0. Limpiando cache de pip..."
-rm -rf /opt/render/project/src/.venv
+# 0. Eliminar el .venv del disco (si existe) para evitar conflictos con Render
+echo "0. Limpiando .venv del disco..."
+rm -rf .venv
 
 # 1. Actualizar pip (con --break-system-packages para entornos externos)
 echo "1. Actualizando pip..."
