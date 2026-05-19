@@ -1,31 +1,28 @@
-#!/bin/bash
-# ===========================================
-# Script de construcción para Render
-# Descarga modelo BERT y configura dependencias
-# ===========================================
+#!/usr/bin/env bash
 
-set -e
+set -o errexit
 
 echo "=== INICIANDO BUILD PARA RENDER ==="
 
-# 1. Instalar dependencias del sistema (Tesseract OCR)
-echo "1. Instalando Tesseract OCR..."
+# 1. Instalar dependencias de Python
+echo "1. Instalando dependencias..."
+pip install -r requirements.txt
+
+# 2. Instalar dependencias del sistema (Tesseract OCR)
+echo "2. Instalando Tesseract OCR..."
 apt-get update
 apt-get install -y tesseract-ocr tesseract-ocr-spa wget
 
-# 2. Descargar modelo spaCy
-echo "2. Descargando modelo spaCy..."
+# 3. Descargar modelo spaCy
+echo "3. Descargando modelo spaCy..."
 python -m spacy download en_core_web_sm
 
-# 3. Crear directorio para el modelo
-echo "3. Preparando directorio del modelo..."
+# 4. Crear directorio para el modelo
+echo "4. Preparando directorio del modelo..."
 mkdir -p red_neuronal/models
 
-# 4. Descargar modelo BERT desde Google Drive
-echo "4. Descargando modelo BERT..."
-# El ID del archivo se extrae de la URL de compartir de Google Drive
-# Enlace: https://drive.google.com/file/d/15ym6naog-z68qtaz3jsjbTSwH4HfxpEy/view
-# ID: 15ym6naog-z68qtaz3jsjbTSwH4HfxpEy
+# 5. Descargar modelo BERT desde Google Drive
+echo "5. Descargando modelo BERT..."
 
 python -c "
 import gdown
@@ -34,13 +31,20 @@ import os
 url = 'https://drive.google.com/uc?id=1dXUht0jrVIA8IqWTLEHPHXd-8kgRc1Um'
 output = 'red_neuronal/models/bert_classifier_category.pt'
 
-# Descargar archivo grande
 gdown.download(url, output, quiet=False)
 print('Modelo descargado exitosamente!')
 "
 
-# 5. Verificar que el modelo existe
-echo "5. Verificando modelo..."
+# 6. Verificar modelo
+echo "6. Verificando modelo..."
 ls -lh red_neuronal/models/
+
+# 7. Recolectar archivos estáticos
+echo "7. Recolectando archivos estáticos..."
+python manage.py collectstatic --noinput
+
+# 8. Ejecutar migraciones de base de datos
+echo "8. Ejecutando migraciones..."
+python manage.py migrate
 
 echo "=== BUILD COMPLETADO ==="

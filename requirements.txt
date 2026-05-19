@@ -36,3 +36,6 @@ gdown>=4.6.0
 
 # Servidor de producción
 gunicorn>=20.0.0
+
+# Archivos estáticos
+whitenoise>=6.0.0

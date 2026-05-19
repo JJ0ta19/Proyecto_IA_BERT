@@ -28,3 +28,9 @@ deep-translator>=1.11.0
 # Utilidades
 tqdm>=4.65.0
 langdetect>=1.0.9
+
+# Archivos estáticos
+whitenoise>=6.0.0
+
+# Servidor de producción
+gunicorn>=20.0.0
