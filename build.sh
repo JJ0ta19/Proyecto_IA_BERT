@@ -4,23 +4,23 @@ set -o errexit
 
 echo "=== INICIANDO BUILD PARA RENDER ==="
 
-# 0. Eliminar entorno virtual viejo (si existe) para forzar Python 3.11
-echo "0. Limpiando entorno virtual viejo..."
-rm -rf .venv
+# 0. Limpiar cache de pip para evitar conflictos
+echo "0. Limpiando cache de pip..."
+rm -rf /opt/render/project/src/.venv
 
-# 1. Crear entorno virtual con Python 3.11
-echo "1. Creando entorno virtual con Python 3.11..."
-python3.11 -m venv .venv
-
-# 2. Activar entorno virtual
-echo "2. Activando entorno virtual..."
-source .venv/bin/activate
-
-# 3. Actualizar pip
-echo "3. Actualizando pip..."
+# 1. Actualizar pip
+echo "1. Actualizando pip..."
 pip install --upgrade pip
 
-# 4. Instalar dependencias de Python
+# 2. Instalar torch primero (sin CUDA para evitar problemas)
+echo "2. Instalando torch CPU-only..."
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+# 3. Instalar transformers (versión específica compatible)
+echo "3. Instalando transformers..."
+pip install 'transformers>=4.30.0,<4.40.0'
+
+# 4. Instalar el resto de dependencias
 echo "4. Instalando dependencias..."
 pip install -r requirements.txt
 
