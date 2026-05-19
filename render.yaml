@@ -11,4 +11,7 @@ services:
         value: proyecto_cv.settings
       - key: DISABLE_CACHE
         value: "true"
+    disk:
+      mountedPath: /opt/render/project/src
+      size: 512
     
