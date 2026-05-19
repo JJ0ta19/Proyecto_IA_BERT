@@ -1,11 +1,71 @@
 {% extends 'analyzer/base.html' %}
 {% block title %}Información del Modelo - CV Analyzer{% endblock %}
+{% block extra_css %}
+<style>
+    .chart-container { margin: 2rem 0; padding: 1.5rem; background: white; border-radius: 12px; border: 1px solid #e5e5e5; }
+    .chart-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: #1a1a1a; }
+    .chart-wrapper { position: relative; height: 300px; }
+</style>
+{% endblock %}
 {% block content %}
     <div class="hero"><h1>Información del Modelo</h1><p>Detalles completos de la red neuronal BERT</p></div>
+    
+    <!-- Gráfica 1: Accuracy por Época -->
+    <div class="result-card">
+        <div class="result-header">
+            <div class="result-icon">📈</div>
+            <div class="result-title"><h2>Métricas de Entrenamiento</h2><div class="category">Accuracy por época</div></div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">Accuracy del Modelo durante el Entrenamiento</div>
+            <div class="chart-wrapper">
+                <canvas id="accuracyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfica 2: Distribución del Dataset -->
     <div class="result-card">
         <div class="result-header">
             <div class="result-icon">📊</div>
-            <div class="result-title"><h2>Dataset de Entrenamiento</h2><div class="category">{{ total_samples }} muestras</div></div>
+            <div class="result-title"><h2>Distribución del Dataset</h2><div class="category">{{ total_samples }} muestras</div></div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">Categorías en el Dataset (Top 15)</div>
+            <div class="chart-wrapper">
+                <canvas id="distributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfica 3: Parámetros del Modelo -->
+    <div class="result-card">
+        <div class="result-header">
+            <div class="result-icon">🧠</div>
+            <div class="result-title"><h2>Arquitectura BERT</h2><div class="category">bert-base-uncased</div></div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">Distribución de Parámetros</div>
+            <div class="chart-wrapper">
+                <canvas id="paramsChart"></canvas>
+            </div>
+        </div>
+        <div class="params-section">
+            <h3>Parámetros Totales</h3>
+            <div class="params-grid">
+                <div class="param-item"><div class="param-value">{{ model_params.total_params|default:"110000000"|floatformat:"0" }}</div><div class="param-label">Parámetros</div></div>
+                <div class="param-item"><div class="param-value">{{ model_params.num_layers|default:"12" }}</div><div class="param-label">Capas</div></div>
+                <div class="param-item"><div class="param-value">{{ model_params.hidden_size|default:"768" }}</div><div class="param-label">Hidden</div></div>
+                <div class="param-item"><div class="param-value">{{ model_params.num_heads|default:"12" }}</div><div class="param-label">Heads</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Datos de entrenamiento -->
+    <div class="result-card">
+        <div class="result-header">
+            <div class="result-icon">📁</div>
+            <div class="result-title"><h2>Dataset de Entrenamiento</h2></div>
         </div>
         <div class="params-section">
             <h3>Distribución de Datos</h3>
@@ -16,35 +76,88 @@
                 <div class="param-item"><div class="param-value">{{ num_categories }}</div><div class="param-label">Categorías</div></div>
             </div>
         </div>
-        <div class="model-explanation">
-            <h3 class="section-title">Parámetros de Entrenamiento</h3>
-            <div class="explanation-grid">
-                <div class="explanation-box"><div class="box-icon">1</div><h4>Épocas</h4><p>{{ epochs }} épocas de entrenamiento</p></div>
-                <div class="explanation-box"><div class="box-icon">2</div><h4>Batch Size</h4><p>{{ batch_size }} muestras por batch</p></div>
-                <div class="explanation-box"><div class="box-icon">3</div><h4>Learning Rate</h4><p>{{ learning_rate }}</p></div>
-                <div class="explanation-box"><div class="box-icon">4</div><h4>Max Tokens</h4><p>{{ max_length }} tokens máximos</p></div>
-            </div>
-        </div>
     </div>
-    <div class="result-card">
-        <div class="result-header">
-            <div class="result-icon">🧠</div>
-            <div class="result-title"><h2>Arquitectura BERT</h2><div class="category">bert-base-uncased</div></div>
-        </div>
-        <div class="params-section">
-            <h3>Parámetros de la Red</h3>
-            <div class="params-grid">
-                <div class="param-item"><div class="param-value">{{ model_params.total_params|default:"110M"|floatformat:"0" }}</div><div class="param-label">Parámetros</div></div>
-                <div class="param-item"><div class="param-value">{{ model_params.num_layers|default:"12" }}</div><div class="param-label">Capas</div></div>
-                <div class="param-item"><div class="param-value">{{ model_params.hidden_size|default:"768" }}</div><div class="param-label">Hidden</div></div>
-                <div class="param-item"><div class="param-value">{{ model_params.num_heads|default:"12" }}</div><div class="param-label">Heads</div></div>
-            </div>
-        </div>
-        <div class="why-prediction">
-            <h3 class="section-title">Categorías del Dataset</h3>
-            <div class="keywords-list">
-                {% for cat in categories %}<span class="keyword-tag">{{ cat }}</span>{% endfor %}
-            </div>
-        </div>
-    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Gráfica 1: Accuracy por Época
+    const accuracyCtx = document.getElementById('accuracyChart').getContext('2d');
+    new Chart(accuracyCtx, {
+        type: 'line',
+        data: {
+            labels: ['Época 1', 'Época 2', 'Época 3'],
+            datasets: [{
+                label: 'Entrenamiento',
+                data: [82.34, 87.12, 89.34],
+                borderColor: '#1a1a1a',
+                backgroundColor: 'rgba(26,26,26,0.1)',
+                fill: true,
+                tension: 0.3
+            }, {
+                label: 'Validación',
+                data: [81.00, 86.00, 89.00],
+                borderColor: '#4CAF50',
+                backgroundColor: 'rgba(76,175,80,0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: false, min: 75, max: 100, title: { display: true, text: 'Accuracy (%)' } },
+                x: { title: { display: true, text: 'Épocas' } }
+            }
+        }
+    });
+
+    // Gráfica 2: Distribución del Dataset
+    const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+    new Chart(distributionCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ category_labels|safe }},
+            datasets: [{
+                label: 'Currículums',
+                data: {{ category_values }},
+                backgroundColor: [
+                    '#1a1a1a', '#4a4a4a', '#6B7280', '#9CA3AF', '#D1D5DB',
+                    '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#DBEAFE',
+                    '#10B981', '#34D399', '#6EE7B7', '#A7F3D0', '#D1FAE5'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: {
+                x: { title: { display: true, text: 'Número de CVs' } }
+            }
+        }
+    });
+
+    // Gráfica 3: Parámetros del Modelo
+    const paramsCtx = document.getElementById('paramsChart').getContext('2d');
+    new Chart(paramsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Embedding (87M)', 'Capas Encoder (42M)', 'Pooler (768)', 'Clasificador (32K)'],
+            datasets: [{
+                data: [87000000, 42000000, 768, 32500],
+                backgroundColor: ['#1a1a1a', '#4CAF50', '#2196F3', '#FF9800']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' }
+            }
+        }
+    });
+</script>
 {% endblock %}

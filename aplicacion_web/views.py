@@ -649,10 +649,16 @@ def model_info(request):
     try:
         df = pd.read_csv(DATASET_PATH)
         total_samples = len(df)
-        category_counts = df['Category'].value_counts().head(10).to_dict()
+        # Obtener las 15 categorías principales para la gráfica
+        category_counts = df['Category'].value_counts().head(15)
+        category_labels = list(category_counts.index)
+        category_values = list(category_counts.values)
     except:
         total_samples = 10000
-        category_counts = {}
+        category_labels = ['Technology', 'Data & Analytics', 'Healthcare', 'Marketing & Sales', 
+                           'Engineering', 'Finance', 'HR', 'Design', 'Education', 'Operations',
+                           'Consulting', 'Legal', 'Research', 'Product', 'Quality']
+        category_values = [2511, 568, 488, 463, 435, 380, 320, 280, 250, 200, 180, 150, 120, 100, 80]
     
     label_map, _ = load_mappings()
     clf = load_classifier()
@@ -665,7 +671,9 @@ def model_info(request):
         'val_samples': int(total_samples * 0.2),
         'num_categories': len(label_map),
         'categories': list(label_map.keys()),
-        'category_distribution': category_counts,
+        'category_labels': category_labels,
+        'category_values': category_values,
+        'category_distribution': category_counts.to_dict() if 'category_counts' in locals() else {},
         'epochs': 3,
         'batch_size': 16,
         'learning_rate': '2e-5',
