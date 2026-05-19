@@ -10,22 +10,19 @@ pip install --upgrade pip
 echo "2. Instalando torch CPU-only..."
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 
-echo "3. Instalando tokenizers pre-built wheel..."
-pip install tokenizers>=0.13.0
+echo "3. Forzando instalacion binaria de tokenizers y transformers..."
+pip install --only-binary :all: tokenizers transformers
 
-echo "4. Instalando transformers..."
-pip install 'transformers>=4.30.0,<4.40.0'
-
-echo "5. Instalando resto de dependencias..."
+echo "4. Instalando resto de dependencias..."
 pip install -r requirements.txt
 
-echo "6. Descargando modelo spaCy..."
+echo "5. Descargando modelo spaCy..."
 python -m spacy download en_core_web_sm || echo "spaCy download skipped"
 
-echo "7. Preparando directorio del modelo..."
+echo "6. Preparando directorio del modelo..."
 mkdir -p red_neuronal/models
 
-echo "8. Descargando modelo BERT..."
+echo "7. Descargando modelo BERT..."
 python -c "
 import gdown
 url = 'https://drive.google.com/uc?id=1dXUht0jrVIA8IqWTLEHPHXd-8kgRc1Um'
@@ -34,10 +31,10 @@ gdown.download(url, output, quiet=False)
 print('Modelo descargado!')
 " || echo "gdown skipped"
 
-echo "9. Recolectando archivos estaticos..."
+echo "8. Recolectando archivos estaticos..."
 python manage.py collectstatic --noinput || true
 
-echo "10. Ejecutando migraciones..."
+echo "9. Ejecutando migraciones..."
 python manage.py migrate || true
 
 echo "=== BUILD COMPLETADO ==="
