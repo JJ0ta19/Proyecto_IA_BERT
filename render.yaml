@@ -1,16 +1,16 @@
 services:
   - type: web
     name: cv-bert-analyzer
-    env: python
+    env: python3
     buildCommand: chmod +x build.sh && ./build.sh
-    startCommand: PYTHONPATH=/opt/render/project/src gunicorn proyecto_cv.wsgi:application --bind 0.0.0.0:${PORT:-10000}
+    startCommand: gunicorn proyecto_cv.wsgi:application --bind 0.0.0.0:${PORT:-10000}
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: proyecto_cv.settings
       - key: DISABLE_CACHE
         value: "true"
-      - key: RENDER_VIRTUAL_ENV
-        value: ""
+      - key: PYTHONUNBUFFERED
+        value: "true"
     disk:
       mountedPath: /opt/render/project/src
       size: 512
