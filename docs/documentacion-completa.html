@@ -39,12 +39,15 @@
 <nav>
   <strong>Contenido</strong>
   <ol>
-    <li><a href="#sec-01">1. Instalación y Configuración</a></li><li><a href="#sec-02">2. Arquitectura y Tecnologías</a></li><li><a href="#sec-03">3. Red Neuronal BERT</a></li><li><a href="#sec-04">4. Aplicación Web</a></li><li><a href="#sec-05">5. Datos de Entrenamiento</a></li><li><a href="#sec-06">6. Métricas y Gráficas</a></li><li><a href="#sec-07">7. Despliegue en Render</a></li>
+    <li><a href="#sec-01">1. Instalación y Configuración</a></li><li><a href="#sec-02">2. Arquitectura y Tecnologías</a></li><li><a href="#sec-03">3. Red Neuronal BERT</a></li><li><a href="#sec-04">4. Datos de Entrenamiento</a></li><li><a href="#sec-05">5. Métricas y Gráficas</a></li>
   </ol>
 </nav>
 <main>
 <section id="sec-01"><h1 id="guia-de-instalacion-y-configuracion">Guía de Instalación y Configuración</h1>
-<p>Pasos para instalar las dependencias e inicializar el sistema de clasificación de currículums.</p>
+<p>Pasos para instalar las dependencias y ejecutar el núcleo de IA del sistema de clasificación de currículums.</p>
+<blockquote>
+<p><strong>Rama <code>solo-red-neuronal</code>:</strong> solo se requiere el entorno de Machine Learning; no hay aplicación web ni despliegue.</p>
+</blockquote>
 <hr />
 <h2 id="requisitos-previos">Requisitos Previos</h2>
 <table>
@@ -59,17 +62,12 @@
 <tr>
 <td>Python</td>
 <td>3.11 (recomendado)</td>
-<td><code>runtime.txt</code> define 3.11 para despliegue</td>
+<td>Versión usada para entrenar el modelo</td>
 </tr>
 <tr>
 <td>pip</td>
 <td>Última</td>
 <td>Gestor de paquetes de Python</td>
-</tr>
-<tr>
-<td>Tesseract OCR</td>
-<td>5.x</td>
-<td>Necesario solo si se procesan PDFs escaneados</td>
 </tr>
 <tr>
 <td>Git</td>
@@ -81,16 +79,11 @@
 <hr />
 <h2 id="1-estructura-del-proyecto">1. Estructura del Proyecto</h2>
 <pre><code>Proyecto_IA_BERT/
-├── manage.py                  # Punto de entrada Django
-├── proyecto_cv/               # Configuración del proyecto Django
-├── aplicacion_web/            # Aplicación web (vistas, URLs, templates)
 ├── red_neuronal/              # Modelo BERT y NLP
 │   ├── src/                   # Código fuente del modelo
 │   ├── models/                # Artefactos del modelo (generado en runtime)
 │   └── requirements.txt
 ├── datos_entrenamiento/       # Dataset (training_data.csv)
-├── pdfs_temporales/           # PDFs subidos por usuarios (se eliminan solos)
-├── build.sh / render.yaml     # Despliegue en Render
 └── docs/                      # Documentación del proyecto
 </code></pre>
 <hr />
@@ -104,65 +97,20 @@ venv\Scripts\activate
 python3 -m venv venv
 source venv/bin/activate
 </code></pre>
-<h3 id="22-dependencias-del-proyecto">2.2 Dependencias del proyecto</h3>
-<pre><code class="language-bash"># 1. Framework web
-pip install &quot;Django&gt;=4.0&quot;
-
-# 2. Red neuronal (torch, transformers, spacy, OCR, etc.)
-cd red_neuronal
+<h3 id="22-dependencias-del-nucleo-de-ia">2.2 Dependencias del núcleo de IA</h3>
+<pre><code class="language-bash">cd red_neuronal
 pip install -r requirements.txt
 </code></pre>
-<p>Las dependencias principales son: <code>torch</code>, <code>transformers</code>, <code>pandas</code>, <code>scikit-learn</code>, <code>spacy</code>, <code>pytesseract</code>, <code>deep-translator</code>, <code>langdetect</code>, <code>pymupdf</code>, <code>Pillow</code>. Ver <a href="#sec-02">02-arquitectura-tecnologias.md</a> para el rol de cada una.</p>
+<p>Las principales: <code>torch</code>, <code>transformers</code>, <code>pandas</code>, <code>numpy</code>, <code>scikit-learn</code>, <code>spacy</code>, <code>gdown</code>, <code>tqdm</code>. Ver <a href="#sec-02">02-arquitectura-tecnologias.md</a> para el rol de cada una.</p>
 <h3 id="23-descargar-modelo-de-spacy">2.3 Descargar modelo de spaCy</h3>
 <pre><code class="language-bash">python -m spacy download en_core_web_sm
 </code></pre>
-<h3 id="24-instalar-tesseract-ocr-solo-pdfs-escaneados">2.4 Instalar Tesseract OCR (solo PDFs escaneados)</h3>
-<p><strong>Windows:</strong><br />
-1. Descargar desde: <a href="https://github.com/UB-Mannheim/tesseract/wiki">https://github.com/UB-Mannheim/tesseract/wiki</a><br />
-2. Instalar y agregar al PATH del sistema<br />
-3. Opcional: instalar datos de idioma español (<code>tesseract-ocr-spa</code>)</p>
-<p><strong>Linux (Ubuntu):</strong></p>
-<pre><code class="language-bash">sudo apt-get update &amp;&amp; sudo apt-get install tesseract-ocr tesseract-ocr-spa
-</code></pre>
-<p><strong>Mac (Homebrew):</strong></p>
-<pre><code class="language-bash">brew install tesseract
-</code></pre>
 <hr />
-<h2 id="3-configurar-el-proyecto-django">3. Configurar el Proyecto Django</h2>
-<p>El proyecto ya viene configurado; estos pasos son de verificación:</p>
-<h3 id="31-settingspy-proyecto_cvsettingspy">3.1 settings.py (<code>proyecto_cv/settings.py</code>)</h3>
-<pre><code class="language-python">INSTALLED_APPS = [..., 'aplicacion_web']
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'pdfs_temporales'
-
-# Ruta del núcleo de IA al PYTHONPATH
-sys.path.insert(0, os.path.join(BASE_DIR, 'red_neuronal'))
-</code></pre>
-<h3 id="32-crear-carpetas-generadas-en-runtime">3.2 Crear carpetas generadas en runtime</h3>
-<pre><code class="language-bash">mkdir pdfs_temporales          # PDFs temporales de usuarios
-mkdir red_neuronal/models      # Artefacto del modelo entrenado
-</code></pre>
-<hr />
-<h2 id="4-ejecutar-el-proyecto">4. Ejecutar el Proyecto</h2>
-<pre><code class="language-bash"># Migraciones
-python manage.py makemigrations
-python manage.py migrate
-
-# Servidor de desarrollo
-python manage.py runserver
-</code></pre>
-<p>La aplicación queda disponible en: <a href="http://127.0.0.1:8000/">http://127.0.0.1:8000/</a></p>
-<blockquote>
-<p><strong>Nota PowerShell:</strong> si Django no encuentra el módulo de settings, ejecutar antes:<br />
-<code>$env:DJANGO_SETTINGS_MODULE="proyecto_cv.settings"</code></p>
-</blockquote>
-<hr />
-<h2 id="5-modelo-bert">5. Modelo BERT</h2>
-<p>Al iniciar, la aplicación verifica si existe <code>red_neuronal/models/bert_classifier_category.pt</code>:</p>
+<h2 id="3-preparar-el-modelo-bert">3. Preparar el Modelo BERT</h2>
+<p>Al ejecutar la predicción, el sistema verifica si existe <code>red_neuronal/models/bert_classifier_category.pt</code>:</p>
 <ol>
 <li><strong>Si existe</strong> → se carga directamente.</li>
-<li><strong>Si NO existe</strong> → se descarga automáticamente desde Google Drive usando <code>gdown</code> (implementado en <code>aplicacion_web/views.py</code>).</li>
+<li><strong>Si NO existe</strong> → se descarga automáticamente desde Google Drive usando <code>gdown</code>.</li>
 </ol>
 <h3 id="descarga-manual-alternativa">Descarga manual (alternativa)</h3>
 <p><strong>Enlace:</strong> <a href="https://drive.google.com/file/d/1dXUht0jrVIA8IqWTLEHPHXd-8kgRc1Um/view?usp=sharing">https://drive.google.com/file/d/1dXUht0jrVIA8IqWTLEHPHXd-8kgRc1Um/view?usp=sharing</a></p>
@@ -171,145 +119,72 @@ python manage.py runserver
 <pre><code class="language-bash">cd red_neuronal
 python train_bert_classifier.py
 </code></pre>
-<p>Requiere el dataset en <code>datos_entrenamiento/1_resume_classification/training_data.csv</code>. Ver <a href="#sec-05">05-datos-entrenamiento.md</a>.</p>
+<p>Requiere el dataset en <code>datos_entrenamiento/1_resume_classification/training_data.csv</code>. Ver <a href="#sec-04">04-datos-entrenamiento.md</a>.</p>
 <hr />
-<h2 id="6-verificar-la-instalacion">6. Verificar la Instalación</h2>
+<h2 id="4-ejecutar">4. Ejecutar</h2>
+<pre><code class="language-bash">cd red_neuronal
+
+# Predicción de ejemplo con el modelo entrenado
+python predict.py
+
+# Punto de entrada general
+python main.py
+</code></pre>
+<hr />
+<h2 id="5-verificar-la-instalacion">5. Verificar la Instalación</h2>
 <ol>
-<li>Abrir <a href="http://127.0.0.1:8000/">http://127.0.0.1:8000/</a></li>
-<li>Subir un PDF de currículum</li>
+<li>Confirmar que <code>red_neuronal/models/bert_classifier_category.pt</code> existe (o que hay conexión a internet para descargarlo)</li>
+<li>Ejecutar <code>python predict.py</code> dentro de <code>red_neuronal/</code></li>
 <li>El sistema debe mostrar la categoría profesional predicha y su confianza</li>
 </ol>
 <hr />
-<h2 id="7-solucion-de-problemas">7. Solución de Problemas</h2>
+<h2 id="6-solucion-de-problemas">6. Solución de Problemas</h2>
 <h3 id="modulenotfounderror-no-module-named-src"><code>ModuleNotFoundError: No module named 'src'</code></h3>
-<p>Agregar la ruta del núcleo de IA al <code>PYTHONPATH</code> (ya incluida en <code>settings.py</code>):</p>
-<pre><code class="language-python">import sys, os
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(BASE_DIR, 'red_neuronal'))
+<p>Ejecutar los scripts desde dentro de la carpeta <code>red_neuronal/</code>:</p>
+<pre><code class="language-bash">cd red_neuronal
+python predict.py
 </code></pre>
-<h3 id="tesseractnotfounderror"><code>TesseractNotFoundError</code></h3>
-<p>Configurar la ruta de Tesseract en <code>views.py</code>:</p>
-<pre><code class="language-python">import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+<h3 id="error-al-instalar-torch">Error al instalar torch</h3>
+<p>Instalar la versión CPU-only desde el índice oficial:</p>
+<pre><code class="language-bash">pip install torch --index-url https://download.pytorch.org/whl/cpu
 </code></pre>
 <h3 id="no-such-file-or-directory-training_datacsv"><code>No such file or directory: training_data.csv</code></h3>
 <p>Verificar que el dataset exista en <code>datos_entrenamiento/1_resume_classification/training_data.csv</code>.</p>
 <hr />
-<h2 id="8-resumen-de-comandos">8. Resumen de Comandos</h2>
+<h2 id="7-resumen-de-comandos">7. Resumen de Comandos</h2>
 <pre><code class="language-bash">venv\Scripts\activate                 # Activar entorno (Windows)
-pip install &quot;Django&gt;=4.0&quot;
-cd red_neuronal &amp;&amp; pip install -r requirements.txt
+cd red_neuronal
+pip install -r requirements.txt
 python -m spacy download en_core_web_sm
-python manage.py makemigrations &amp;&amp; python manage.py migrate
-python manage.py runserver
+python train_bert_classifier.py       # Entrenar
+python predict.py                     # Predecir
 </code></pre></section><section id="sec-02"><h1 id="arquitectura-y-tecnologias">Arquitectura y Tecnologías</h1>
 <p>Descripción técnica de las tecnologías del proyecto, su rol en el pipeline y la justificación de cada elección.</p>
+<blockquote>
+<p><strong>Rama <code>solo-red-neuronal</code>:</strong> se describe únicamente el pipeline de Machine Learning. La versión web (Django) y el despliegue corresponden a la rama <code>Main</code>.</p>
+</blockquote>
 <hr />
-<h2 id="1-pipeline-completo-del-sistema">1. Pipeline Completo del Sistema</h2>
-<pre><code>Usuario sube PDF
-    ↓
-Django recibe petición (views.py)
-    ↓
-PyMuPDF (PDF digital) o Tesseract OCR (PDF escaneado)
-    ↓
-GoogleTranslator (traducción al inglés)
-    ↓
-spaCy (NER, lemmatización, extracción de secciones)
+<h2 id="1-pipeline-del-nucleo-de-ia">1. Pipeline del Núcleo de IA</h2>
+<pre><code>Texto del currículum
     ↓
 TextCleaner (limpieza de texto)
+    ↓
+spaCy (NER, lemmatización, extracción de secciones)
+↓
+SkillExtractor (detección de habilidades)
     ↓
 BERT tokenizer (convertir texto a números)
     ↓
 Modelo BERT (predicción de categoría)
     ↓
-Django renderiza resultado en HTML
-    ↓
-Usuario ve la predicción
+Categoría profesional + confianza %
 </code></pre>
 <hr />
-<h2 id="2-django-framework-web">2. Django (Framework Web)</h2>
-<p>Framework web full-stack de Python que maneja toda la <strong>interfaz web</strong>:</p>
-<ul>
-<li>Servidor web que recibe peticiones de los usuarios</li>
-<li>Rutas (URLs) hacia las vistas</li>
-<li>Plantillas HTML con los resultados</li>
-<li>Gestión de archivos subidos (PDFs)</li>
-<li>Base de datos (SQLite)</li>
-</ul>
-<h3 id="componentes-usados">Componentes usados</h3>
-<table>
-<thead>
-<tr>
-<th>Componente</th>
-<th>Función en el proyecto</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>django.shortcuts.render</code></td>
-<td>Renderiza plantillas HTML con datos</td>
-</tr>
-<tr>
-<td><code>django.core.files.storage</code></td>
-<td>Guarda archivos subidos (PDFs)</td>
-</tr>
-<tr>
-<td><code>django.conf.settings</code></td>
-<td>Configuración global</td>
-</tr>
-<tr>
-<td><code>django.urls.path</code></td>
-<td>Define rutas/URLs</td>
-</tr>
-<tr>
-<td><code>django.views</code></td>
-<td>Funciones que procesan peticiones</td>
-</tr>
-</tbody>
-</table>
-<h3 id="por-que-django-y-no-flask">¿Por qué Django y no Flask?</h3>
-<table>
-<thead>
-<tr>
-<th>Característica</th>
-<th>Flask</th>
-<th>Django</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Tipo</td>
-<td>Micro-framework</td>
-<td>Full-stack</td>
-</tr>
-<tr>
-<td>Base de datos</td>
-<td>No incluida</td>
-<td>ORM incluido</td>
-</tr>
-<tr>
-<td>Autenticación</td>
-<td>Manual</td>
-<td>Incluida</td>
-</tr>
-<tr>
-<td>Estructura</td>
-<td>Flexible</td>
-<td>Opinada (opinionated)</td>
-</tr>
-<tr>
-<td>Tamaño de proyecto</td>
-<td>Pequeño-mediano</td>
-<td>Grande</td>
-</tr>
-</tbody>
-</table>
-<p>Para este proyecto Django aporta más estructura lista, mejor manejo de seguridad de archivos subidos y mejor integración con templates.</p>
-<hr />
-<h2 id="3-dependencias-de-ia-y-procesamiento">3. Dependencias de IA y Procesamiento</h2>
+<h2 id="2-dependencias-de-ia-y-procesamiento">2. Dependencias de IA y Procesamiento</h2>
 <h3 id="deep-learning-y-modelos-de-lenguaje">Deep Learning y Modelos de Lenguaje</h3>
 <p><strong>torch (PyTorch)</strong> — Framework de deep learning de Meta. Permite entrenar redes neuronales mediante diferenciación automática y retropropagación. Usado para definir, entrenar y evaluar el modelo BERT.</p>
 <p><strong>transformers (Hugging Face)</strong> — Librería con arquitecturas pre-entrenadas de última generación (BERT, RoBERTa, DistilBERT). Incluye tokenizadores, configuraciones y métodos de fine-tuning. Es el estándar de la industria para NLP.</p>
+<p><strong>gdown</strong> — Descarga del modelo entrenado desde Google Drive cuando no existe localmente.</p>
 <h3 id="ciencia-de-datos">Ciencia de Datos</h3>
 <p><strong>pandas</strong> — Manipulación y análisis de datos con DataFrames optimizados. Carga y preprocesa el dataset de currículums.</p>
 <p><strong>numpy</strong> — Computación numérica: arrays multidimensionales y funciones matemáticas de alto rendimiento.</p>
@@ -321,17 +196,9 @@ Usuario ve la predicción
 - Lemmatización: reducción de palabras a su raíz<br />
 - Dependency parsing: análisis sintáctico</p>
 <p>Modelo usado: <code>en_core_web_sm</code>.</p>
-<p><strong>deep-translator</strong> — Traducción automática del español al inglés antes de procesar (el modelo está entrenado en inglés).</p>
-<p><strong>langdetect</strong> — Detección automática de idioma (algoritmo n-gram); evita traducir textos ya en inglés.</p>
-<h3 id="extraccion-de-texto-de-pdfs">Extracción de Texto de PDFs</h3>
-<p><strong>pymupdf (fitz)</strong> — Extrae texto de PDFs digitales (con texto embebido) y convierte páginas a imágenes para OCR.</p>
-<p><strong>pytesseract</strong> — Wrapper de Python para Tesseract OCR (motor de Google). Convierte imágenes a texto; requiere Tesseract instalado en el sistema.</p>
-<p><strong>Pillow</strong> — Procesamiento de imágenes: convierte páginas PDF a imágenes antes de pasarlas a Tesseract.</p>
-<h3 id="utilidades">Utilidades</h3>
-<p><strong>python-dotenv</strong> — Variables de entorno desde <code>.env</code>, separando configuración sensible del código.</p>
 <p><strong>tqdm</strong> — Barras de progreso durante el entrenamiento.</p>
 <hr />
-<h2 id="4-resumen-rol-por-tecnologia">4. Resumen: Rol por Tecnología</h2>
+<h2 id="3-resumen-rol-por-tecnologia">3. Resumen: Rol por Tecnología</h2>
 <table>
 <thead>
 <tr>
@@ -341,48 +208,28 @@ Usuario ve la predicción
 </thead>
 <tbody>
 <tr>
-<td>Django</td>
-<td>Servidor web y estructura</td>
-</tr>
-<tr>
-<td>PyMuPDF</td>
-<td>Leer PDFs digitales</td>
-</tr>
-<tr>
-<td>Tesseract + pytesseract</td>
-<td>Leer PDFs escaneados (OCR)</td>
-</tr>
-<tr>
-<td>Pillow</td>
-<td>Manipular imágenes</td>
-</tr>
-<tr>
-<td>GoogleTranslator</td>
-<td>Traducción automática</td>
-</tr>
-<tr>
-<td>langdetect</td>
-<td>Detección de idioma</td>
-</tr>
-<tr>
-<td>spaCy</td>
-<td>Procesamiento de lenguaje natural</td>
+<td>torch</td>
+<td>Framework de deep learning</td>
 </tr>
 <tr>
 <td>BERT + transformers</td>
 <td>Modelo de machine learning</td>
 </tr>
 <tr>
-<td>torch</td>
-<td>Framework de deep learning</td>
+<td>spaCy</td>
+<td>Procesamiento de lenguaje natural</td>
 </tr>
 <tr>
 <td>pandas / scikit-learn</td>
 <td>Manejo y evaluación del dataset</td>
 </tr>
+<tr>
+<td>gdown</td>
+<td>Descarga automática del modelo</td>
+</tr>
 </tbody>
 </table>
-<p>Cada tecnología cumple un rol específico en el pipeline de extremo a extremo: extraer → traducir → limpiar → analizar → clasificar.</p></section><section id="sec-03"><h1 id="documentacion-tecnica-de-la-red-neuronal-bert">DOCUMENTACIÓN TÉCNICA DE LA RED NEURONAL BERT</h1>
+<p>Cada tecnología cumple un rol específico en el pipeline: limpiar → analizar → tokenizar → clasificar.</p></section><section id="sec-03"><h1 id="documentacion-tecnica-de-la-red-neuronal-bert">DOCUMENTACIÓN TÉCNICA DE LA RED NEURONAL BERT</h1>
 <h2 id="sistema-de-clasificacion-de-curriculums">Sistema de Clasificación de Currículums</h2>
 <hr />
 <h1 id="1-introduccion-y-contexto">1. INTRODUCCIÓN Y CONTEXTO</h1>
@@ -1320,130 +1167,7 @@ Mostrar resultado
 <li><strong>Tesseract</strong>: https://github.com/tesseract-ocr/tesseract</li>
 </ul>
 <hr />
-<p><em>Documento creado para presentación del proyecto de clasificación de currículums con BERT</em></p></section><section id="sec-04"><h1 id="aplicacion-web-django">Aplicación Web Django</h1>
-<p>Interfaz web del sistema: permite subir currículums en PDF y obtener la categoría profesional predicha por el modelo BERT.</p>
-<hr />
-<h2 id="rutas-disponibles">Rutas disponibles</h2>
-<table>
-<thead>
-<tr>
-<th>Ruta</th>
-<th>Vista</th>
-<th>Descripción</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>/</code></td>
-<td><code>home</code></td>
-<td>Página principal con formulario de subida</td>
-</tr>
-<tr>
-<td><code>/upload/</code></td>
-<td><code>upload_cv</code></td>
-<td>Procesa el PDF subido y muestra la predicción</td>
-</tr>
-<tr>
-<td><code>/modelo/</code></td>
-<td><code>model_info</code></td>
-<td>Información del modelo con gráficas interactivas</td>
-</tr>
-<tr>
-<td><code>/admin/</code></td>
-<td>Django admin</td>
-<td>Panel de administración</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="vistas-principales-aplicacion_webviewspy">Vistas principales (<code>aplicacion_web/views.py</code>)</h2>
-<table>
-<thead>
-<tr>
-<th>Función</th>
-<th>Función</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>home()</code></td>
-<td>Página principal</td>
-</tr>
-<tr>
-<td><code>upload_cv()</code></td>
-<td>Procesa el PDF desde la página principal</td>
-</tr>
-<tr>
-<td><code>load_classifier()</code></td>
-<td>Carga el modelo BERT (con auto-descarga vía gdown si falta)</td>
-</tr>
-<tr>
-<td><code>predict_category()</code></td>
-<td>Realiza la predicción con probabilidades por categoría</td>
-</tr>
-<tr>
-<td><code>extract_text_from_pdf()</code></td>
-<td>Extrae texto del PDF (PyMuPDF + OCR Tesseract)</td>
-</tr>
-<tr>
-<td><code>translate_to_english()</code></td>
-<td>Traduce el texto al inglés</td>
-</tr>
-</tbody>
-</table>
-<h2 id="templates-aplicacion_webtemplatesanalyzer">Templates (<code>aplicacion_web/templates/analyzer/</code>)</h2>
-<table>
-<thead>
-<tr>
-<th>Archivo</th>
-<th>Contenido</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>base.html</code></td>
-<td>Plantilla base con estilos</td>
-</tr>
-<tr>
-<td><code>index.html</code></td>
-<td>Página principal con formulario</td>
-</tr>
-<tr>
-<td><code>analyze.html</code></td>
-<td>Resultado del análisis</td>
-</tr>
-<tr>
-<td><code>model_info.html</code></td>
-<td>Info del modelo con gráficas Chart.js</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="flujo-completo">Flujo completo</h2>
-<ol>
-<li>Usuario sube PDF → se guarda en <code>pdfs_temporales/</code></li>
-<li>Se extrae el texto (PyMuPDF para PDFs digitales, Tesseract OCR para escaneados)</li>
-<li>Se preprocesa: detección de idioma → traducción al inglés → limpieza NLP</li>
-<li>El modelo BERT predice la categoría con nivel de confianza</li>
-<li>Se renderiza el resultado en la vista</li>
-<li><strong>El PDF temporal se elimina automáticamente</strong></li>
-</ol>
-<hr />
-<h2 id="configuracion-de-archivos-subidos">Configuración de archivos subidos</h2>
-<p>En <code>proyecto_cv/settings.py</code>:</p>
-<pre><code class="language-python">MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'pdfs_temporales'
-</code></pre>
-<p>Notas sobre <code>pdfs_temporales/</code>:<br />
-- Puede quedar vacía después de usar la aplicación (borrado automático)<br />
-- No almacenar archivos importantes ahí</p>
-<hr />
-<h2 id="requerimientos">Requerimientos</h2>
-<ul>
-<li>Django 4.2+</li>
-<li>Modelo BERT entrenado en <code>red_neuronal/models/bert_classifier_category.pt</code><br />
-  (auto-descargado desde Google Drive si no existe — ver <a href="#sec-01">01-instalacion.md</a>)</li>
-</ul></section><section id="sec-05"><h1 id="datos-de-entrenamiento">Datos de Entrenamiento</h1>
+<p><em>Documento creado para presentación del proyecto de clasificación de currículums con BERT</em></p></section><section id="sec-04"><h1 id="datos-de-entrenamiento">Datos de Entrenamiento</h1>
 <p>Dataset utilizado para entrenar el modelo BERT de clasificación de currículums.</p>
 <hr />
 <h2 id="ubicacion">Ubicación</h2>
@@ -1536,8 +1260,8 @@ labels = df['Category'].tolist()
 <h2 id="notas">Notas</h2>
 <ul>
 <li><strong>Solo este dataset</strong> es necesario para entrenar el modelo BERT; otros CSV fueron eliminados por no usarse.</li>
-</ul></section><section id="sec-06"><h1 id="documentacion-de-graficas-metricas-del-modelo-bert">Documentación de Gráficas - Métricas del Modelo BERT</h1>
-<p>Este documento explica las 3 gráficas mostradas en la página de información del modelo y su significado técnico.</p>
+</ul></section><section id="sec-05"><h1 id="documentacion-de-graficas-metricas-del-modelo-bert">Documentación de Gráficas - Métricas del Modelo BERT</h1>
+<p>Este documento explica las 3 métricas/gráficas clave del modelo y su significado técnico. Pueden visualizarse con Matplotlib o en el notebook incluido (<code>red_neuronal/notebooks/resumen_analisis.ipynb</code>).</p>
 <hr />
 <h2 id="1-grafica-de-accuracy-por-epoca">1. Gráfica de Accuracy por Época</h2>
 <h3 id="descripcion">Descripción</h3>
@@ -1720,73 +1444,41 @@ labels = df['Category'].tolist()
 <li>Pero solo necesitamos ajustar 32,500 para especializarlo</li>
 </ul>
 <hr />
-<h2 id="por-que-no-utilizamos-matplotlib">¿Por qué no utilizamos Matplotlib?</h2>
-<h3 id="comparacion-tecnica">Comparación técnica:</h3>
+<h2 id="como-visualizar-las-metricas">¿Cómo visualizar las métricas?</h2>
+<p>En la versión standalone (sin aplicación web) se recomienda:</p>
 <table>
 <thead>
 <tr>
-<th>Característica</th>
-<th>Chart.js</th>
-<th>Matplotlib</th>
+<th>Herramienta</th>
+<th>Uso recomendado</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Entorno de ejecución</strong></td>
-<td>Navegador del usuario (JavaScript)</td>
-<td>Servidor (Python)</td>
+<td><strong>Matplotlib</strong></td>
+<td>Gráficas estáticas para informes PDF</td>
 </tr>
 <tr>
-<td><strong>Generación de imágenes</strong></td>
-<td>No genera archivos</td>
-<td>Crea archivos .png</td>
-</tr>
-<tr>
-<td><strong>Interactividad</strong></td>
-<td>Hover, tooltips, animaciones</td>
-<td>Imagen estática</td>
-</tr>
-<tr>
-<td><strong>Rendimiento</strong></td>
-<td>Rápido (cliente)</td>
-<td>Más lento (servidor)</td>
-</tr>
-<tr>
-<td><strong>Instalación</strong></td>
-<td>Solo agregar CDN</td>
-<td>Requiere pip install</td>
-</tr>
-<tr>
-<td><strong>Para aplicaciones web</strong></td>
-<td>Ideal</td>
-<td>No recomendado</td>
+<td><strong>Jupyter Notebook</strong></td>
+<td>Exploración interactiva (<code>red_neuronal/notebooks/resumen_analisis.ipynb</code>)</td>
 </tr>
 </tbody>
 </table>
-<h3 id="razones-de-la-eleccion">Razones de la elección:</h3>
-<ol>
-<li>
-<p><strong>Gráficas interactivas</strong>: El usuario puede pasar el mouse sobre las barras para ver valores exactos, algo que Matplotlib no ofrece.</p>
-</li>
-<li>
-<p><strong>No requiere procesamiento en servidor</strong>: Chart.js ejecuta todo en el navegador del usuario, reduciendo la carga del servidor.</p>
-</li>
-<li>
-<p><strong>Mejor presentación profesional</strong>: Las animaciones y transiciones de Chart.js se ven más modernas y profesionales para una presentación.</p>
-</li>
-<li>
-<p><strong>Sin generación de archivos</strong>: No necesitamos crear, guardar ni servir imágenes PNG, lo cual simplifica la arquitectura.</p>
-</li>
-<li>
-<p><strong>Integración nativa con HTML</strong>: Chart.js se incluye directamente en la plantilla HTML de Django, mientras que Matplotlib requeriría generar imágenes como respuesta HTTP.</p>
-</li>
-</ol>
-<h3 id="cuando-usar-matplotlib">Cuándo usar Matplotlib:</h3>
+<h3 id="ejemplo-con-matplotlib">Ejemplo con Matplotlib:</h3>
+<pre><code class="language-python">import matplotlib.pyplot as plt
+
+epocas = [1, 2, 3]
+accuracy = [82.34, 87.12, 89.34]
+
+plt.plot(epocas, accuracy, marker='o')
+plt.xlabel('Época'); plt.ylabel('Accuracy (%)')
+plt.title('Accuracy por época - BERT')
+plt.show()
+</code></pre>
 <p>Matplotlib sería apropiado si necesitamos:<br />
 - Guardar gráficas como imágenes para un informe PDF<br />
 - Generar visualizaciones offline<br />
 - Procesar grandes cantidades de datos en batch</p>
-<p>Para una aplicación web interactiva como esta, Chart.js es la elección correcta.</p>
 <hr />
 <h2 id="resumen-tecnico">Resumen Técnico</h2>
 <table>
@@ -1818,127 +1510,17 @@ labels = df['Category'].tolist()
 <hr />
 <h2 id="tecnologias-utilizadas">Tecnologías Utilizadas</h2>
 <ul>
-<li><strong>Chart.js</strong>: Biblioteca JavaScript para visualización de datos interactiva</li>
-<li><strong>Django</strong>: Framework web para renderizar plantillas con datos dinámicos</li>
+<li><strong>Matplotlib / Jupyter</strong>: Visualización de datos (opcional, para análisis)</li>
 <li><strong>BERT (bert-base-uncased)</strong>: Modelo pre-entrenado de Hugging Face</li>
 </ul>
 <hr />
 <h2 id="referencias">Referencias</h2>
 <ul>
-<li>Implementación: <code>aplicacion_web/templates/analyzer/model_info.html</code></li>
-<li>Datos de categorías: <code>aplicacion_web/views.py</code> (función <code>model_info</code>)</li>
+<li>Notebook de análisis: <code>red_neuronal/notebooks/resumen_analisis.ipynb</code></li>
+<li>Datos de categorías: <code>red_neuronal/src/datasets/data_loader.py</code></li>
 <li>Dataset: <code>datos_entrenamiento/1_resume_classification/training_data.csv</code></li>
 <li>Modelo: <code>red_neuronal/models/bert_classifier_category.pt</code></li>
-</ul></section><section id="sec-07"><h1 id="despliegue-en-render">Despliegue en Render</h1>
-<p>Guía de despliegue de la aplicación en <a href="https://render.com">Render</a> como servicio web con Gunicorn + WhiteNoise.</p>
-<hr />
-<h2 id="archivos-de-configuracion">Archivos de configuración</h2>
-<table>
-<thead>
-<tr>
-<th>Archivo</th>
-<th>Propósito</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>render.yaml</code></td>
-<td>Definición del servicio (Blueprint de Render)</td>
-</tr>
-<tr>
-<td><code>build.sh</code></td>
-<td>Script de build: dependencias, modelo y migraciones</td>
-</tr>
-<tr>
-<td><code>runtime.txt</code></td>
-<td>Versión de Python (<code>python-3.11.0</code>)</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="configuracion-del-servicio-renderyaml">Configuración del servicio (<code>render.yaml</code>)</h2>
-<pre><code class="language-yaml">services:
-  - type: web
-    name: cv-bert-analyzer
-    env: python3
-    buildCommand: chmod +x build.sh &amp;&amp; ./build.sh
-    startCommand: gunicorn proyecto_cv.wsgi:application --bind 0.0.0.0:${PORT:-10000}
-    envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: proyecto_cv.settings
-</code></pre>
-<hr />
-<h2 id="proceso-de-build-buildsh">Proceso de build (<code>build.sh</code>)</h2>
-<ol>
-<li>Actualizar pip</li>
-<li>Instalar <strong>torch CPU-only</strong> (índice oficial de PyTorch; más ligero para producción)</li>
-<li>Instalar <strong>tokenizers/transformers solo binarios</strong> (<code>--only-binary :all:</code> evita compilar Rust)</li>
-<li>Instalar el resto de <code>requirements.txt</code></li>
-<li>Descargar modelo spaCy <code>en_core_web_sm</code></li>
-<li>Crear <code>red_neuronal/models/</code></li>
-<li><strong>Descargar el modelo BERT</strong> desde Google Drive con <code>gdown</code></li>
-<li><code>collectstatic</code> (archivos estáticos con WhiteNoise)</li>
-<li>Migraciones</li>
-</ol>
-<hr />
-<h2 id="ajustes-de-django-para-produccion">Ajustes de Django para producción</h2>
-<p>En <code>proyecto_cv/settings.py</code>:</p>
-<pre><code class="language-python">DEBUG = 'RENDER' not in os.environ          # DEBUG off en Render
-ALLOWED_HOSTS = ['*', RENDER_EXTERNAL_HOSTNAME]
-
-# WhiteNoise para archivos estáticos (sin nginx)
-MIDDLEWARE = [..., 'whitenoise.middleware.WhiteNoiseMiddleware', ...]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-</code></pre>
-<hr />
-<h2 id="optimizaciones-aplicadas">Optimizaciones aplicadas</h2>
-<ul>
-<li><strong>Lazy loading</strong>: imports pesados (torch, transformers) dentro de funciones para no cargar PyTorch al inicio del servicio</li>
-<li><strong>torch CPU-only</strong>: imagen más pequeña y compatible</li>
-<li><strong>tokenizers binarios</strong>: evita fallos de compilación durante el build</li>
-</ul>
-<hr />
-<h2 id="despliegue-manual">Despliegue manual</h2>
-<ol>
-<li>Conectar el repositorio en el dashboard de Render</li>
-<li>Render detecta <code>render.yaml</code> (Blueprint) o configurar manualmente:</li>
-<li><strong>Build command:</strong> <code>chmod +x build.sh &amp;&amp; ./build.sh</code></li>
-<li><strong>Start command:</strong> <code>gunicorn proyecto_cv.wsgi:application --bind 0.0.0.0:$PORT</code></li>
-<li>Variables de entorno: <code>DJANGO_SETTINGS_MODULE=proyecto_cv.settings</code></li>
-</ol>
-<hr />
-<h2 id="solucion-de-problemas-historicos-commits-de-la-rama-deploy">Solución de problemas históricos (commits de la rama deploy)</h2>
-<table>
-<thead>
-<tr>
-<th>Problema</th>
-<th>Solución aplicada</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Python 3.14 incompatible con torch</td>
-<td>Forzar Python 3.11 vía <code>runtime.txt</code></td>
-</tr>
-<tr>
-<td>Compilación de tokenizers falla</td>
-<td><code>pip install --only-binary :all: tokenizers transformers</code></td>
-</tr>
-<tr>
-<td>Torch demasiado pesado</td>
-<td>Instalar desde índice CPU-only</td>
-</tr>
-<tr>
-<td>Puerto incorrecto en Render</td>
-<td>Bind a <code>0.0.0.0:$PORT</code> con Gunicorn</td>
-</tr>
-<tr>
-<td>Carga lenta al inicio</td>
-<td>Lazy loading de imports de ML</td>
-</tr>
-</tbody>
-</table></section>
+</ul></section>
 </main>
 <footer>Proyecto IA BERT — Documentación técnica completa · Generada el 2026-08-24</footer>
 </body>

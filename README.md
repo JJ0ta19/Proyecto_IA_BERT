@@ -1,50 +1,42 @@
 # Proyecto IA BERT — Clasificador de Currículums
 
-Sistema web que **clasifica currículums (CVs) en 42 categorías profesionales** usando un modelo de red neuronal **BERT** fine-tuned (`bert-base-uncased`). El usuario sube su CV en PDF y la aplicación predice la categoría profesional con su nivel de confianza.
+Sistema de **clasificación de currículums (CVs) en 42 categorías profesionales** usando un modelo de red neuronal **BERT** fine-tuned (`bert-base-uncased`). El núcleo del proyecto es la red neuronal: recibe el texto de un CV y predice su categoría profesional con nivel de confianza.
 
-Pipeline completo: extracción de texto (PyMuPDF/OCR) → traducción → preprocesamiento NLP → clasificación BERT → resultado web.
+> **Rama `solo-red-neuronal`:** versión del proyecto centrada exclusivamente en el modelo de Machine Learning, sin aplicación web ni configuración de despliegue. Para la versión web completa, ver la rama `Main`.
 
 ## Características
 
-- **Framework web:** Django 4.2 + plantillas con Chart.js
 - **Modelo:** BERT (`bert-base-uncased`, ~110M parámetros) fine-tuned para 42 clases
-- **OCR:** PyMuPDF (PDFs digitales) + Tesseract (PDFs escaneados)
-- **NLP:** spaCy (NER, lemmatización), deep-translator + langdetect
+- **Framework ML:** PyTorch + Transformers (Hugging Face)
+- **NLP:** spaCy (NER, lemmatización), limpieza y extracción de habilidades
+- **Dataset:** 10,000 currículums en 42 categorías
 - **Carga del modelo:** automática — descarga desde Google Drive si no existe
-- **Despliegue:** Render (Gunicorn + WhiteNoise) — ver [docs/07-despliegue-render.md](docs/07-despliegue-render.md)
+- **Notebook** de análisis incluido (`red_neuronal/notebooks/resumen_analisis.ipynb`)
 
 ## Estructura del proyecto
 
 ```
 Proyecto_IA_BERT/
-├── manage.py                       # Punto de entrada Django
-├── proyecto_cv/                    # Configuración del proyecto Django
-│   ├── settings.py                 # Settings (media, static, WhiteNoise)
-│   └── urls.py                     # URLs raíz
-├── aplicacion_web/                 # Aplicación web
-│   ├── views.py                    # Vistas: subida, análisis, info del modelo
-│   ├── urls.py                     # Rutas: /, /upload/, /modelo/
-│   └── templates/analyzer/         # Plantillas HTML + Chart.js
 ├── red_neuronal/                   # Núcleo de IA
-│   ├── src/
-│   │   ├── models/bert_classifier.py   # Clasificador BERT
-│   │   ├── datasets/                   # Carga y preprocesamiento del dataset
-│   │   ├── preprocessing/              # Limpieza NLP y extracción de skills
-│   │   └── utils/config.py             # Configuración global
+│   ├── main.py                     # Punto de entrada
+│   ├── predict.py                  # Predicción con modelo entrenado
 │   ├── train_bert_classifier.py    # Entrenamiento
-│   ├── predict.py                  # Predicción por consola
-│   └── models/                     # Artefacto .pt (generado/descargado)
+│   ├── test_train.py               # Pruebas de entrenamiento
+│   ├── requirements.txt            # Dependencias
+│   ├── models/                     # Artefacto .pt (generado/descargado)
+│   ├── notebooks/                  # Jupyter notebook de análisis
+│   └── src/
+│       ├── models/bert_classifier.py   # Clasificador BERT
+│       ├── datasets/                   # Carga y preprocesamiento del dataset
+│       └── preprocessing/              # Limpieza NLP y extracción de skills
 ├── datos_entrenamiento/            # Dataset: training_data.csv (10,000 CVs)
-├── pdfs_temporales/                # PDFs de usuarios (borrado automático)
-├── build.sh · render.yaml          # Despliegue en Render
 └── docs/                           # Documentación completa
 ```
 
 ## Requisitos
 
-- Python 3.11 (ver `runtime.txt`)
-- Tesseract OCR (solo para PDFs escaneados)
-- Dependencias: `red_neuronal/requirements.txt` + `Django>=4.0`
+- Python 3.11 recomendado
+- Dependencias: `red_neuronal/requirements.txt`
 
 ## Instalación rápida
 
@@ -58,28 +50,41 @@ venv\Scripts\activate            # Windows
 # source venv/bin/activate       # Linux/Mac
 
 # Dependencias
-pip install "Django>=4.0"
-cd red_neuronal && pip install -r requirements.txt && cd ..
+cd red_neuronal && pip install -r requirements.txt
 python -m spacy download en_core_web_sm
-
-# Base de datos y arranque
-python manage.py migrate
-python manage.py runserver
 ```
 
 Guía detallada: [docs/01-instalacion.md](docs/01-instalacion.md)
 
-## Ejecución
+## Uso
 
-La aplicación queda disponible en `http://127.0.0.1:8000/`
+### Entrenar el modelo
 
-| Ruta | Descripción |
-|------|-------------|
-| `/` | Página principal: subir CV en PDF |
-| `/upload/` | Procesa el CV y muestra la predicción |
-| `/modelo/` | Información del modelo con gráficas interactivas |
+```bash
+cd red_neuronal
+python train_bert_classifier.py
+```
 
-**Flujo:** subir PDF → extraer texto (PyMuPDF/OCR) → traducir al inglés → limpiar con NLP → BERT predice categoría → resultado con confianza % → PDF temporal eliminado.
+Genera `red_neuronal/models/bert_classifier_category.pt`.
+
+### Predecir categoría de un CV
+
+```bash
+cd red_neuronal
+python predict.py
+```
+
+Si el modelo no existe, se descarga automáticamente desde Google Drive.
+
+### Uso programático
+
+```python
+from src.models.bert_classifier import BertClassifierModel
+
+classifier = BertClassifierModel(num_classes=42, device='cpu')
+classifier.load_model('models/bert_classifier_category.pt')
+predictions = classifier.predict(['texto del curriculum'])
+```
 
 ## Modelo de Machine Learning
 
@@ -99,12 +104,11 @@ El modelo se entrena con transfer learning: se ajusta el BERT pre-entrenado con 
 
 | Error | Causa/Solución |
 |-------|----------------|
-| `ModuleNotFoundError: No module named 'src'` | Agregar `red_neuronal/` al PYTHONPATH (ya configurado en settings) |
-| `TesseractNotFoundError` | Instalar Tesseract y configurar ruta en `views.py` |
+| `ModuleNotFoundError: No module named 'src'` | Ejecutar los scripts dentro de `red_neuronal/` |
 | `No such file: training_data.csv` | Verificar dataset en `datos_entrenamiento/` |
 | Modelo no descarga | Descarga manual desde Google Drive (ver docs/01) |
 
-Más detalles: [docs/01-instalacion.md §7](docs/01-instalacion.md)
+Más detalles: [docs/01-instalacion.md](docs/01-instalacion.md)
 
 ## Documentación
 
@@ -113,9 +117,7 @@ Más detalles: [docs/01-instalacion.md §7](docs/01-instalacion.md)
 | [01-instalacion.md](docs/01-instalacion.md) | Instalación, configuración y solución de problemas |
 | [02-arquitectura-tecnologias.md](docs/02-arquitectura-tecnologias.md) | Pipeline, tecnologías y justificación |
 | [03-red-neuronal-bert.md](docs/03-red-neuronal-bert.md) | Documentación técnica completa del modelo BERT |
-| [04-aplicacion-web.md](docs/04-aplicacion-web.md) | Vistas, rutas y flujo de la aplicación web |
-| [05-datos-entrenamiento.md](docs/05-datos-entrenamiento.md) | Dataset y distribución de categorías |
-| [06-metricas-graficas.md](docs/06-metricas-graficas.md) | Métricas del modelo y gráficas |
-| [07-despliegue-render.md](docs/07-despliegue-render.md) | Despliegue en producción (Render) |
+| [04-datos-entrenamiento.md](docs/04-datos-entrenamiento.md) | Dataset y distribución de categorías |
+| [05-metricas-graficas.md](docs/05-metricas-graficas.md) | Métricas del modelo y gráficas |
 | [documentacion-completa.html](docs/documentacion-completa.html) | Manual técnico completo (HTML) |
 | [manual-tecnico.pdf](docs/manual-tecnico.pdf) | Manual técnico completo (PDF) |

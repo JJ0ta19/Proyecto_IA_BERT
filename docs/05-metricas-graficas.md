@@ -1,6 +1,6 @@
 # Documentación de Gráficas - Métricas del Modelo BERT
 
-Este documento explica las 3 gráficas mostradas en la página de información del modelo y su significado técnico.
+Este documento explica las 3 métricas/gráficas clave del modelo y su significado técnico. Pueden visualizarse con Matplotlib o en el notebook incluido (`red_neuronal/notebooks/resumen_analisis.ipynb`).
 
 ---
 
@@ -135,39 +135,33 @@ Esta gráfica demuestra el concepto de **Transfer Learning**: usamos un modelo p
 
 ---
 
-## ¿Por qué no utilizamos Matplotlib?
+## ¿Cómo visualizar las métricas?
 
-### Comparación técnica:
+En la versión standalone (sin aplicación web) se recomienda:
 
-| Característica | Chart.js | Matplotlib |
-|----------------|----------|------------|
-| **Entorno de ejecución** | Navegador del usuario (JavaScript) | Servidor (Python) |
-| **Generación de imágenes** | No genera archivos | Crea archivos .png |
-| **Interactividad** | Hover, tooltips, animaciones | Imagen estática |
-| **Rendimiento** | Rápido (cliente) | Más lento (servidor) |
-| **Instalación** | Solo agregar CDN | Requiere pip install |
-| **Para aplicaciones web** | Ideal | No recomendado |
+| Herramienta | Uso recomendado |
+|-------------|-----------------|
+| **Matplotlib** | Gráficas estáticas para informes PDF |
+| **Jupyter Notebook** | Exploración interactiva (`red_neuronal/notebooks/resumen_analisis.ipynb`) |
 
-### Razones de la elección:
+### Ejemplo con Matplotlib:
 
-1. **Gráficas interactivas**: El usuario puede pasar el mouse sobre las barras para ver valores exactos, algo que Matplotlib no ofrece.
+```python
+import matplotlib.pyplot as plt
 
-2. **No requiere procesamiento en servidor**: Chart.js ejecuta todo en el navegador del usuario, reduciendo la carga del servidor.
+epocas = [1, 2, 3]
+accuracy = [82.34, 87.12, 89.34]
 
-3. **Mejor presentación profesional**: Las animaciones y transiciones de Chart.js se ven más modernas y profesionales para una presentación.
-
-4. **Sin generación de archivos**: No necesitamos crear, guardar ni servir imágenes PNG, lo cual simplifica la arquitectura.
-
-5. **Integración nativa con HTML**: Chart.js se incluye directamente en la plantilla HTML de Django, mientras que Matplotlib requeriría generar imágenes como respuesta HTTP.
-
-### Cuándo usar Matplotlib:
+plt.plot(epocas, accuracy, marker='o')
+plt.xlabel('Época'); plt.ylabel('Accuracy (%)')
+plt.title('Accuracy por época - BERT')
+plt.show()
+```
 
 Matplotlib sería apropiado si necesitamos:
 - Guardar gráficas como imágenes para un informe PDF
 - Generar visualizaciones offline
 - Procesar grandes cantidades de datos en batch
-
-Para una aplicación web interactiva como esta, Chart.js es la elección correcta.
 
 ---
 
@@ -183,15 +177,14 @@ Para una aplicación web interactiva como esta, Chart.js es la elección correct
 
 ## Tecnologías Utilizadas
 
-- **Chart.js**: Biblioteca JavaScript para visualización de datos interactiva
-- **Django**: Framework web para renderizar plantillas con datos dinámicos
+- **Matplotlib / Jupyter**: Visualización de datos (opcional, para análisis)
 - **BERT (bert-base-uncased)**: Modelo pre-entrenado de Hugging Face
 
 ---
 
 ## Referencias
 
-- Implementación: `aplicacion_web/templates/analyzer/model_info.html`
-- Datos de categorías: `aplicacion_web/views.py` (función `model_info`)
+- Notebook de análisis: `red_neuronal/notebooks/resumen_analisis.ipynb`
+- Datos de categorías: `red_neuronal/src/datasets/data_loader.py`
 - Dataset: `datos_entrenamiento/1_resume_classification/training_data.csv`
 - Modelo: `red_neuronal/models/bert_classifier_category.pt`

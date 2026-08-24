@@ -10,10 +10,8 @@ DOCS = [
     ("01-instalacion.md", "1. Instalación y Configuración"),
     ("02-arquitectura-tecnologias.md", "2. Arquitectura y Tecnologías"),
     ("03-red-neuronal-bert.md", "3. Red Neuronal BERT"),
-    ("04-aplicacion-web.md", "4. Aplicación Web"),
-    ("05-datos-entrenamiento.md", "5. Datos de Entrenamiento"),
-    ("06-metricas-graficas.md", "6. Métricas y Gráficas"),
-    ("07-despliegue-render.md", "7. Despliegue en Render"),
+    ("04-datos-entrenamiento.md", "4. Datos de Entrenamiento"),
+    ("05-metricas-graficas.md", "5. Métricas y Gráficas"),
 ]
 
 md = markdown.Markdown(extensions=["tables", "fenced_code", "toc", "nl2br"])
