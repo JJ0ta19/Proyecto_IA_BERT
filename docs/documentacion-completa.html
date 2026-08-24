@@ -1,0 +1,1945 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proyecto IA BERT - Documentación Completa</title>
+<style>
+  :root { --primary: #2563eb; --dark: #1e293b; --light: #f1f5f9; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; color: var(--dark); line-height: 1.65; }
+  header { background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff; padding: 48px 24px; text-align: center; }
+  header h1 { margin: 0 0 8px; font-size: 2em; }
+  header p { margin: 0; opacity: .9; }
+  .meta { font-size: .85em; opacity: .75; margin-top: 10px; }
+  nav { background: var(--light); padding: 20px 32px; border-bottom: 3px solid var(--primary); }
+  nav strong { display: block; margin-bottom: 10px; }
+  nav ol { margin: 0; padding-left: 22px; columns: 2; }
+  main { max-width: 960px; margin: 0 auto; padding: 16px 32px 64px; }
+  section { border-bottom: 1px solid #e2e8f0; padding-top: 12px; }
+  h1 { color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 6px; }
+  h2 { color: #1d4ed8; margin-top: 1.8em; }
+  code { background: var(--light); padding: 2px 6px; border-radius: 4px; font-size: .92em; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 14px 18px; border-radius: 8px; overflow-x: auto; }
+  pre code { background: none; color: inherit; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: .95em; }
+  th { background: var(--primary); color: #fff; }
+  th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+  tr:nth-child(even) td { background: var(--light); }
+  blockquote { border-left: 4px solid var(--primary); margin: 14px 0; padding: 8px 18px; background: var(--light); }
+  footer { background: var(--dark); color: #94a3b8; text-align: center; padding: 18px; font-size: .85em; }
+</style>
+</head>
+<body>
+<header>
+  <h1>&#129302; Proyecto IA BERT</h1>
+  <p>Sistema de Clasificación de Currículums con Red Neuronal BERT</p>
+  <div class="meta">Django · PyTorch · Transformers · spaCy · Tesseract OCR &nbsp;|&nbsp; v1.0 &nbsp;|&nbsp; 2026-08-24</div>
+</header>
+<nav>
+  <strong>Contenido</strong>
+  <ol>
+    <li><a href="#sec-01">1. Instalación y Configuración</a></li><li><a href="#sec-02">2. Arquitectura y Tecnologías</a></li><li><a href="#sec-03">3. Red Neuronal BERT</a></li><li><a href="#sec-04">4. Aplicación Web</a></li><li><a href="#sec-05">5. Datos de Entrenamiento</a></li><li><a href="#sec-06">6. Métricas y Gráficas</a></li><li><a href="#sec-07">7. Despliegue en Render</a></li>
+  </ol>
+</nav>
+<main>
+<section id="sec-01"><h1 id="guia-de-instalacion-y-configuracion">Guía de Instalación y Configuración</h1>
+<p>Pasos para instalar las dependencias e inicializar el sistema de clasificación de currículums.</p>
+<hr />
+<h2 id="requisitos-previos">Requisitos Previos</h2>
+<table>
+<thead>
+<tr>
+<th>Requisito</th>
+<th>Versión</th>
+<th>Notas</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python</td>
+<td>3.11 (recomendado)</td>
+<td><code>runtime.txt</code> define 3.11 para despliegue</td>
+</tr>
+<tr>
+<td>pip</td>
+<td>Última</td>
+<td>Gestor de paquetes de Python</td>
+</tr>
+<tr>
+<td>Tesseract OCR</td>
+<td>5.x</td>
+<td>Necesario solo si se procesan PDFs escaneados</td>
+</tr>
+<tr>
+<td>Git</td>
+<td>Opcional</td>
+<td>Para clonar el repositorio</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-estructura-del-proyecto">1. Estructura del Proyecto</h2>
+<pre><code>Proyecto_IA_BERT/
+├── manage.py                  # Punto de entrada Django
+├── proyecto_cv/               # Configuración del proyecto Django
+├── aplicacion_web/            # Aplicación web (vistas, URLs, templates)
+├── red_neuronal/              # Modelo BERT y NLP
+│   ├── src/                   # Código fuente del modelo
+│   ├── models/                # Artefactos del modelo (generado en runtime)
+│   └── requirements.txt
+├── datos_entrenamiento/       # Dataset (training_data.csv)
+├── pdfs_temporales/           # PDFs subidos por usuarios (se eliminan solos)
+├── build.sh / render.yaml     # Despliegue en Render
+└── docs/                      # Documentación del proyecto
+</code></pre>
+<hr />
+<h2 id="2-instalar-dependencias">2. Instalar Dependencias</h2>
+<h3 id="21-crear-entorno-virtual">2.1 Crear entorno virtual</h3>
+<pre><code class="language-bash"># Windows
+python -m venv venv
+venv\Scripts\activate
+
+# Linux/Mac
+python3 -m venv venv
+source venv/bin/activate
+</code></pre>
+<h3 id="22-dependencias-del-proyecto">2.2 Dependencias del proyecto</h3>
+<pre><code class="language-bash"># 1. Framework web
+pip install &quot;Django&gt;=4.0&quot;
+
+# 2. Red neuronal (torch, transformers, spacy, OCR, etc.)
+cd red_neuronal
+pip install -r requirements.txt
+</code></pre>
+<p>Las dependencias principales son: <code>torch</code>, <code>transformers</code>, <code>pandas</code>, <code>scikit-learn</code>, <code>spacy</code>, <code>pytesseract</code>, <code>deep-translator</code>, <code>langdetect</code>, <code>pymupdf</code>, <code>Pillow</code>. Ver <a href="#sec-02">02-arquitectura-tecnologias.md</a> para el rol de cada una.</p>
+<h3 id="23-descargar-modelo-de-spacy">2.3 Descargar modelo de spaCy</h3>
+<pre><code class="language-bash">python -m spacy download en_core_web_sm
+</code></pre>
+<h3 id="24-instalar-tesseract-ocr-solo-pdfs-escaneados">2.4 Instalar Tesseract OCR (solo PDFs escaneados)</h3>
+<p><strong>Windows:</strong><br />
+1. Descargar desde: <a href="https://github.com/UB-Mannheim/tesseract/wiki">https://github.com/UB-Mannheim/tesseract/wiki</a><br />
+2. Instalar y agregar al PATH del sistema<br />
+3. Opcional: instalar datos de idioma español (<code>tesseract-ocr-spa</code>)</p>
+<p><strong>Linux (Ubuntu):</strong></p>
+<pre><code class="language-bash">sudo apt-get update &amp;&amp; sudo apt-get install tesseract-ocr tesseract-ocr-spa
+</code></pre>
+<p><strong>Mac (Homebrew):</strong></p>
+<pre><code class="language-bash">brew install tesseract
+</code></pre>
+<hr />
+<h2 id="3-configurar-el-proyecto-django">3. Configurar el Proyecto Django</h2>
+<p>El proyecto ya viene configurado; estos pasos son de verificación:</p>
+<h3 id="31-settingspy-proyecto_cvsettingspy">3.1 settings.py (<code>proyecto_cv/settings.py</code>)</h3>
+<pre><code class="language-python">INSTALLED_APPS = [..., 'aplicacion_web']
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'pdfs_temporales'
+
+# Ruta del núcleo de IA al PYTHONPATH
+sys.path.insert(0, os.path.join(BASE_DIR, 'red_neuronal'))
+</code></pre>
+<h3 id="32-crear-carpetas-generadas-en-runtime">3.2 Crear carpetas generadas en runtime</h3>
+<pre><code class="language-bash">mkdir pdfs_temporales          # PDFs temporales de usuarios
+mkdir red_neuronal/models      # Artefacto del modelo entrenado
+</code></pre>
+<hr />
+<h2 id="4-ejecutar-el-proyecto">4. Ejecutar el Proyecto</h2>
+<pre><code class="language-bash"># Migraciones
+python manage.py makemigrations
+python manage.py migrate
+
+# Servidor de desarrollo
+python manage.py runserver
+</code></pre>
+<p>La aplicación queda disponible en: <a href="http://127.0.0.1:8000/">http://127.0.0.1:8000/</a></p>
+<blockquote>
+<p><strong>Nota PowerShell:</strong> si Django no encuentra el módulo de settings, ejecutar antes:<br />
+<code>$env:DJANGO_SETTINGS_MODULE="proyecto_cv.settings"</code></p>
+</blockquote>
+<hr />
+<h2 id="5-modelo-bert">5. Modelo BERT</h2>
+<p>Al iniciar, la aplicación verifica si existe <code>red_neuronal/models/bert_classifier_category.pt</code>:</p>
+<ol>
+<li><strong>Si existe</strong> → se carga directamente.</li>
+<li><strong>Si NO existe</strong> → se descarga automáticamente desde Google Drive usando <code>gdown</code> (implementado en <code>aplicacion_web/views.py</code>).</li>
+</ol>
+<h3 id="descarga-manual-alternativa">Descarga manual (alternativa)</h3>
+<p><strong>Enlace:</strong> <a href="https://drive.google.com/file/d/1dXUht0jrVIA8IqWTLEHPHXd-8kgRc1Um/view?usp=sharing">https://drive.google.com/file/d/1dXUht0jrVIA8IqWTLEHPHXd-8kgRc1Um/view?usp=sharing</a></p>
+<p>Guardar como: <code>red_neuronal/models/bert_classifier_category.pt</code></p>
+<h3 id="entrenamiento-local-opcional">Entrenamiento local (opcional)</h3>
+<pre><code class="language-bash">cd red_neuronal
+python train_bert_classifier.py
+</code></pre>
+<p>Requiere el dataset en <code>datos_entrenamiento/1_resume_classification/training_data.csv</code>. Ver <a href="#sec-05">05-datos-entrenamiento.md</a>.</p>
+<hr />
+<h2 id="6-verificar-la-instalacion">6. Verificar la Instalación</h2>
+<ol>
+<li>Abrir <a href="http://127.0.0.1:8000/">http://127.0.0.1:8000/</a></li>
+<li>Subir un PDF de currículum</li>
+<li>El sistema debe mostrar la categoría profesional predicha y su confianza</li>
+</ol>
+<hr />
+<h2 id="7-solucion-de-problemas">7. Solución de Problemas</h2>
+<h3 id="modulenotfounderror-no-module-named-src"><code>ModuleNotFoundError: No module named 'src'</code></h3>
+<p>Agregar la ruta del núcleo de IA al <code>PYTHONPATH</code> (ya incluida en <code>settings.py</code>):</p>
+<pre><code class="language-python">import sys, os
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(BASE_DIR, 'red_neuronal'))
+</code></pre>
+<h3 id="tesseractnotfounderror"><code>TesseractNotFoundError</code></h3>
+<p>Configurar la ruta de Tesseract en <code>views.py</code>:</p>
+<pre><code class="language-python">import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+</code></pre>
+<h3 id="no-such-file-or-directory-training_datacsv"><code>No such file or directory: training_data.csv</code></h3>
+<p>Verificar que el dataset exista en <code>datos_entrenamiento/1_resume_classification/training_data.csv</code>.</p>
+<hr />
+<h2 id="8-resumen-de-comandos">8. Resumen de Comandos</h2>
+<pre><code class="language-bash">venv\Scripts\activate                 # Activar entorno (Windows)
+pip install &quot;Django&gt;=4.0&quot;
+cd red_neuronal &amp;&amp; pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+python manage.py makemigrations &amp;&amp; python manage.py migrate
+python manage.py runserver
+</code></pre></section><section id="sec-02"><h1 id="arquitectura-y-tecnologias">Arquitectura y Tecnologías</h1>
+<p>Descripción técnica de las tecnologías del proyecto, su rol en el pipeline y la justificación de cada elección.</p>
+<hr />
+<h2 id="1-pipeline-completo-del-sistema">1. Pipeline Completo del Sistema</h2>
+<pre><code>Usuario sube PDF
+    ↓
+Django recibe petición (views.py)
+    ↓
+PyMuPDF (PDF digital) o Tesseract OCR (PDF escaneado)
+    ↓
+GoogleTranslator (traducción al inglés)
+    ↓
+spaCy (NER, lemmatización, extracción de secciones)
+    ↓
+TextCleaner (limpieza de texto)
+    ↓
+BERT tokenizer (convertir texto a números)
+    ↓
+Modelo BERT (predicción de categoría)
+    ↓
+Django renderiza resultado en HTML
+    ↓
+Usuario ve la predicción
+</code></pre>
+<hr />
+<h2 id="2-django-framework-web">2. Django (Framework Web)</h2>
+<p>Framework web full-stack de Python que maneja toda la <strong>interfaz web</strong>:</p>
+<ul>
+<li>Servidor web que recibe peticiones de los usuarios</li>
+<li>Rutas (URLs) hacia las vistas</li>
+<li>Plantillas HTML con los resultados</li>
+<li>Gestión de archivos subidos (PDFs)</li>
+<li>Base de datos (SQLite)</li>
+</ul>
+<h3 id="componentes-usados">Componentes usados</h3>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Función en el proyecto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>django.shortcuts.render</code></td>
+<td>Renderiza plantillas HTML con datos</td>
+</tr>
+<tr>
+<td><code>django.core.files.storage</code></td>
+<td>Guarda archivos subidos (PDFs)</td>
+</tr>
+<tr>
+<td><code>django.conf.settings</code></td>
+<td>Configuración global</td>
+</tr>
+<tr>
+<td><code>django.urls.path</code></td>
+<td>Define rutas/URLs</td>
+</tr>
+<tr>
+<td><code>django.views</code></td>
+<td>Funciones que procesan peticiones</td>
+</tr>
+</tbody>
+</table>
+<h3 id="por-que-django-y-no-flask">¿Por qué Django y no Flask?</h3>
+<table>
+<thead>
+<tr>
+<th>Característica</th>
+<th>Flask</th>
+<th>Django</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tipo</td>
+<td>Micro-framework</td>
+<td>Full-stack</td>
+</tr>
+<tr>
+<td>Base de datos</td>
+<td>No incluida</td>
+<td>ORM incluido</td>
+</tr>
+<tr>
+<td>Autenticación</td>
+<td>Manual</td>
+<td>Incluida</td>
+</tr>
+<tr>
+<td>Estructura</td>
+<td>Flexible</td>
+<td>Opinada (opinionated)</td>
+</tr>
+<tr>
+<td>Tamaño de proyecto</td>
+<td>Pequeño-mediano</td>
+<td>Grande</td>
+</tr>
+</tbody>
+</table>
+<p>Para este proyecto Django aporta más estructura lista, mejor manejo de seguridad de archivos subidos y mejor integración con templates.</p>
+<hr />
+<h2 id="3-dependencias-de-ia-y-procesamiento">3. Dependencias de IA y Procesamiento</h2>
+<h3 id="deep-learning-y-modelos-de-lenguaje">Deep Learning y Modelos de Lenguaje</h3>
+<p><strong>torch (PyTorch)</strong> — Framework de deep learning de Meta. Permite entrenar redes neuronales mediante diferenciación automática y retropropagación. Usado para definir, entrenar y evaluar el modelo BERT.</p>
+<p><strong>transformers (Hugging Face)</strong> — Librería con arquitecturas pre-entrenadas de última generación (BERT, RoBERTa, DistilBERT). Incluye tokenizadores, configuraciones y métodos de fine-tuning. Es el estándar de la industria para NLP.</p>
+<h3 id="ciencia-de-datos">Ciencia de Datos</h3>
+<p><strong>pandas</strong> — Manipulación y análisis de datos con DataFrames optimizados. Carga y preprocesa el dataset de currículums.</p>
+<p><strong>numpy</strong> — Computación numérica: arrays multidimensionales y funciones matemáticas de alto rendimiento.</p>
+<p><strong>scikit-learn</strong> — ML clásico: métricas (accuracy, F1-score), validación cruzada, split de datos y evaluación.</p>
+<h3 id="nlp-y-texto">NLP y Texto</h3>
+<p><strong>spaCy</strong> — Framework industrial de NLP:<br />
+- NER: reconocimiento de entidades (personas, organizaciones, fechas)<br />
+- POS tagging: categorías gramaticales<br />
+- Lemmatización: reducción de palabras a su raíz<br />
+- Dependency parsing: análisis sintáctico</p>
+<p>Modelo usado: <code>en_core_web_sm</code>.</p>
+<p><strong>deep-translator</strong> — Traducción automática del español al inglés antes de procesar (el modelo está entrenado en inglés).</p>
+<p><strong>langdetect</strong> — Detección automática de idioma (algoritmo n-gram); evita traducir textos ya en inglés.</p>
+<h3 id="extraccion-de-texto-de-pdfs">Extracción de Texto de PDFs</h3>
+<p><strong>pymupdf (fitz)</strong> — Extrae texto de PDFs digitales (con texto embebido) y convierte páginas a imágenes para OCR.</p>
+<p><strong>pytesseract</strong> — Wrapper de Python para Tesseract OCR (motor de Google). Convierte imágenes a texto; requiere Tesseract instalado en el sistema.</p>
+<p><strong>Pillow</strong> — Procesamiento de imágenes: convierte páginas PDF a imágenes antes de pasarlas a Tesseract.</p>
+<h3 id="utilidades">Utilidades</h3>
+<p><strong>python-dotenv</strong> — Variables de entorno desde <code>.env</code>, separando configuración sensible del código.</p>
+<p><strong>tqdm</strong> — Barras de progreso durante el entrenamiento.</p>
+<hr />
+<h2 id="4-resumen-rol-por-tecnologia">4. Resumen: Rol por Tecnología</h2>
+<table>
+<thead>
+<tr>
+<th>Tecnología</th>
+<th>Propósito</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Django</td>
+<td>Servidor web y estructura</td>
+</tr>
+<tr>
+<td>PyMuPDF</td>
+<td>Leer PDFs digitales</td>
+</tr>
+<tr>
+<td>Tesseract + pytesseract</td>
+<td>Leer PDFs escaneados (OCR)</td>
+</tr>
+<tr>
+<td>Pillow</td>
+<td>Manipular imágenes</td>
+</tr>
+<tr>
+<td>GoogleTranslator</td>
+<td>Traducción automática</td>
+</tr>
+<tr>
+<td>langdetect</td>
+<td>Detección de idioma</td>
+</tr>
+<tr>
+<td>spaCy</td>
+<td>Procesamiento de lenguaje natural</td>
+</tr>
+<tr>
+<td>BERT + transformers</td>
+<td>Modelo de machine learning</td>
+</tr>
+<tr>
+<td>torch</td>
+<td>Framework de deep learning</td>
+</tr>
+<tr>
+<td>pandas / scikit-learn</td>
+<td>Manejo y evaluación del dataset</td>
+</tr>
+</tbody>
+</table>
+<p>Cada tecnología cumple un rol específico en el pipeline de extremo a extremo: extraer → traducir → limpiar → analizar → clasificar.</p></section><section id="sec-03"><h1 id="documentacion-tecnica-de-la-red-neuronal-bert">DOCUMENTACIÓN TÉCNICA DE LA RED NEURONAL BERT</h1>
+<h2 id="sistema-de-clasificacion-de-curriculums">Sistema de Clasificación de Currículums</h2>
+<hr />
+<h1 id="1-introduccion-y-contexto">1. INTRODUCCIÓN Y CONTEXTO</h1>
+<h2 id="11-que-es-una-red-neuronal">1.1 ¿Qué es una Red Neuronal?</h2>
+<p>Una <strong>red neuronal artificial</strong> es un modelo computacional inspirado en cómo funcionan las neuronas del cerebro biológico. Está compuesta por:</p>
+<ul>
+<li><strong>Neuronas</strong> (nodos): unidades que procesan información</li>
+<li><strong>Capas</strong>: grupos de neuronas que operan en paralelo</li>
+<li>Capa de entrada: recibe los datos</li>
+<li>Capas ocultas: procesan la información</li>
+<li>Capa de salida: produce el resultado</li>
+<li><strong>Pesos y sesgos</strong>: parámetros que se ajustan durante el entrenamiento</li>
+</ul>
+<pre><code>Entrada → [Capa 1] → [Capa 2] → ... → [Capa Salida] → Predicción
+</code></pre>
+<h2 id="12-por-que-usamos-una-red-neuronal-para-este-proyecto">1.2 ¿Por qué usamos una red neuronal para este proyecto?</h2>
+<p><strong>Problema a resolver</strong>: Clasificar automáticamente currículums en 42 categorías profesionales basándose en su contenido.</p>
+<p><strong>Por qué no usar reglas simples?</strong><br />
+- Los currículums varían enormemente en formato y contenido<br />
+- Las categorías no son obvias (un "Python developer" podría estar en "Technology" o "Software")<br />
+- El lenguaje natural es complejo y ambiguo</p>
+<p><strong>Por qué una red neuronal?</strong><br />
+- Aprende patrones complejos directamente de los datos<br />
+- Generaliza a ejemplos no vistos<br />
+- Puede capturar relaciones semánticas sutiles<br />
+- El texto de un CV tiene muchas características implícitas</p>
+<hr />
+<h1 id="2-eleccion-de-la-arquitectura-bert">2. ELECCIÓN DE LA ARQUITECTURA: BERT</h1>
+<h2 id="21-que-es-bert">2.1 ¿Qué es BERT?</h2>
+<p><strong>BERT</strong> (Bidirectional Encoder Representations from Transformers) es una arquitectura de red neuronal desarrollada por Google en 2018. Es un <strong>Transformer</strong> - una arquitectura que revolucionó el procesamiento del lenguaje natural.</p>
+<h3 id="por-que-bert-y-no-otra-arquitectura">¿Por qué BERT y no otra arquitectura?</h3>
+<table>
+<thead>
+<tr>
+<th>Arquitectura</th>
+<th>Ventajas</th>
+<th>Desventajas</th>
+<th>¿Por qué no?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>BERT</strong></td>
+<td>Pre-entrenado, bidirectional,state-of-the-art</td>
+<td>Más pesado</td>
+<td>✅ Elegido</td>
+</tr>
+<tr>
+<td>LSTM/RNN</td>
+<td>Secuencial, bueno para secuencias</td>
+<td>Lento, no captura contexto largo</td>
+<td>No escala bien</td>
+</tr>
+<tr>
+<td>CNN (texto)</td>
+<td>Rápido</td>
+<td>No captura relaciones lejanas</td>
+<td>No óptimo para NLP</td>
+</tr>
+<tr>
+<td>Red simple</td>
+<td>Rápido</td>
+<td>Poco poder expresivo</td>
+<td>No suficiente</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Razones específicas de la elección:</strong></p>
+<ol>
+<li>
+<p><strong>Pre-entrenamiento</strong>: BERT ya fue entrenado con grandes cantidades de texto en inglés, lo que significa que ya "entiende" el lenguaje. Solo necesitamos ajustarlo (fine-tuning) para nuestro problema específico.</p>
+</li>
+<li>
+<p><strong>Bidireccional</strong>: BERT considera el contexto tanto a izquierda como derecha de cada palabra, a diferencia de modelos unidireccionales. Esto es crucial para entender currículums donde el contexto importa.</p>
+</li>
+<li>
+<p><strong>State-of-the-art</strong>: En 2018 y hasta ahora, BERT y sus variantes dominan las tareas de clasificación de texto. Es el estándar de la industria.</p>
+</li>
+<li>
+<p><strong>Transfer Learning</strong>: Podemos tomar el conocimiento general de BERT y adaptarlo a nuestro problema específico con pocos datos de entrenamiento.</p>
+</li>
+</ol>
+<h2 id="22-arquitectura-interna-de-bert">2.2 Arquitectura interna de BERT</h2>
+<pre><code>BERT-base:
+├── Vocabulario: 30,522 palabras
+├── Embedding: 768 dimensiones
+├── Capa de embedding → 768
+├── 12 capas Transformer
+│   ├── Multi-head attention (12 heads)
+│   ├── Feed-forward (3072 dimensiones)
+│   └── Layer normalization
+├── Capa de pooling → 768
+└── Capa de clasificación → 42 (nuestras categorías)
+</code></pre>
+<p><strong>Parámetros totales: ~110 millones</strong></p>
+<h3 id="detalle-de-las-capas">Detalle de las capas:</h3>
+<ol>
+<li><strong>Capa de Embedding</strong>:</li>
+<li>Convierte cada palabra en un vector de 768 números</li>
+<li>
+<p>Usa "Token Embeddings", "Segment Embeddings" y "Position Embeddings"</p>
+</li>
+<li>
+<p><strong>12 Capas Transformer</strong> (ocultas):</p>
+</li>
+<li>
+<p>Cada capa tiene:</p>
+<ul>
+<li><strong>Multi-head Attention</strong>: 12 heads que atienden a diferentes partes del texto</li>
+<li><strong>Feed Forward Network</strong>: red de 3072 → 768 dimensiones</li>
+<li><strong>Layer Normalization</strong>: estabiliza el entrenamiento</li>
+<li><strong>Residual Connections</strong>: conecta capas directamente</li>
+</ul>
+</li>
+<li>
+<p><strong>Capa de Pooling</strong>:</p>
+</li>
+<li>Toma el output del último token [CLS]</li>
+<li>
+<p>Lo pasa por una capa densa y tangente hiperbólica</p>
+</li>
+<li>
+<p><strong>Capa de Clasificación</strong>:</p>
+</li>
+<li>Linear: 768 → 42 (nuestras categorías)</li>
+<li>
+<ul>
+<li>Softmax para obtener probabilidades</li>
+</ul>
+</li>
+</ol>
+<hr />
+<h1 id="3-eleccion-de-librerias-y-dependencias">3. ELECCIÓN DE LIBRERÍAS Y DEPENDENCIAS</h1>
+<h2 id="31-pytorch-torch">3.1 PyTorch (torch)</h2>
+<h3 id="que-es">¿Qué es?</h3>
+<p><strong>PyTorch</strong> es el framework de deep learning de Meta (Facebook). Es una biblioteca que permite definir y entrenar redes neuronales de manera eficiente.</p>
+<h3 id="por-que-se-uso">¿Por qué se usó?</h3>
+<ul>
+<li><strong>Flexibilidad</strong>: Define grafos computacionales dinámicos (mejor para investigación y desarrollo)</li>
+<li><strong>Debugging</strong>: Puedes usar herramientas estándar de Python (pdb, print)</li>
+<li><strong>Comunidad</strong>: Gran ecosistema y documentación</li>
+<li><strong>Integración con transformers</strong>: La librería de HuggingFace está built-in para PyTorch</li>
+</ul>
+<h3 id="configuracion-en-el-proyecto">Configuración en el proyecto:</h3>
+<pre><code class="language-python">import torch
+import torch.nn as nn
+
+# Dispositivo: CPU o GPU (cuda)
+device = torch.device(&quot;cuda&quot; if torch.cuda.is_available() else &quot;cpu&quot;)
+
+# Modelo se mueve al dispositivo
+model = model.to(device)
+</code></pre>
+<blockquote>
+<p><strong>Código fuente:</strong> <code>red_neuronal/train_bert_classifier.py:9</code> y <code>red_neuronal/src/models/bert_classifier.py:196</code></p>
+</blockquote>
+<h2 id="32-transformers-hugging-face">3.2 Transformers (Hugging Face)</h2>
+<h3 id="que-es_1">¿Qué es?</h3>
+<p><strong>Transformers</strong> es la librería de Hugging Face que proporciona implementaciones de modelos pre-entrenados (BERT, RoBERTa, GPT, etc.) y herramientas para NLP.</p>
+<h3 id="por-que-se-uso_1">¿Por qué se usó?</h3>
+<ul>
+<li><strong>Modelos pre-entrenados</strong>: Acceso directo a <code>bert-base-uncased</code></li>
+<li><strong>Tokenizers</strong>: Herramienta optimizada para tokenizar texto</li>
+<li><strong>Fine-tuning</strong>: Funciones para ajustar modelos a nuevas tareas</li>
+</ul>
+<h3 id="configuracion">Configuración:</h3>
+<pre><code class="language-python">from transformers import BertTokenizer, BertModel
+
+# Tokenizer para convertir texto a tokens
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+# Modelo pre-entrenado
+bert_model = BertModel.from_pretrained('bert-base-uncased')
+</code></pre>
+<blockquote>
+<p><strong>Código fuente:</strong> <code>red_neuronal/train_bert_classifier.py:114-115</code> y <code>red_neuronal/src/models/bert_classifier.py:134,202</code></p>
+</blockquote>
+<h3 id="por-que-bert-base-uncased">¿Por qué bert-base-uncased?</h3>
+<ul>
+<li><strong>base</strong>: Tamaño medio (12 capas, 768 hidden)</li>
+<li><strong>uncased</strong>: No diferencia mayúsculas/minúsculas (suficiente para nuestro caso)</li>
+<li>Alternativas: bert-large (más preciso pero más lento), distilbert (más rápido pero menos preciso)</li>
+</ul>
+<h2 id="33-spacy">3.3 spaCy</h2>
+<h3 id="que-es_2">¿Qué es?</h3>
+<p><strong>spaCy</strong> es una librería industrial de NLP que proporciona herramientas rápidas para procesamiento de texto.</p>
+<h3 id="por-que-se-uso_2">¿Por qué se usó?</h3>
+<ul>
+<li><strong>NER (Named Entity Recognition)</strong>: Detectar personas, organizaciones, fechas</li>
+<li><strong>Lemmatización</strong>: Reducir palabras a su forma raíz (running → run)</li>
+<li><strong>POS Tagging</strong>: Etiquetar categorías gramaticales</li>
+<li><strong>Detección de secciones</strong>: Extraer experience, education, skills del CV</li>
+</ul>
+<h3 id="alternativas-consideradas">Alternativas consideradas:</h3>
+<table>
+<thead>
+<tr>
+<th>Librería</th>
+<th>Pros</th>
+<th>Contras</th>
+<th>¿Por qué no?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>spaCy</strong></td>
+<td>Rápida, industrial, buen NER</td>
+<td>Modelo pequeño por defecto</td>
+<td>✅ Elegida</td>
+</tr>
+<tr>
+<td>NLTK</td>
+<td>Clásica, educativa</td>
+<td>Lenta, código antiguo</td>
+<td>Fuera de producción</td>
+</tr>
+<tr>
+<td>Stanford NLP</td>
+<td>Precisa</td>
+<td>Java-based, compleja</td>
+<td>Overkill</td>
+</tr>
+</tbody>
+</table>
+<h2 id="34-tesseract-ocr">3.4 Tesseract (OCR)</h2>
+<h3 id="que-es_3">¿Qué es?</h3>
+<p><strong>Tesseract</strong> es un motor de OCR (Optical Character Recognition) desarrollado por Google. Lee texto de imágenes.</p>
+<h3 id="por-que-se-uso_3">¿Por qué se usó?</h3>
+<p>El proyecto debe procesar <strong>dos tipos de PDFs</strong>:</p>
+<ol>
+<li><strong>PDFs digitales</strong> (con texto embebido):</li>
+<li>PyMuPDF (fitz) extrae el texto directamente</li>
+<li>
+<p>No necesita OCR</p>
+</li>
+<li>
+<p><strong>PDFs escaneados</strong> (imágenes):</p>
+</li>
+<li>No tienen texto, son solo píxeles</li>
+<li>Necesitamos OCR para "leer" la imagen</li>
+<li>Tesseract convierte imagen → texto</li>
+</ol>
+<h3 id="pipeline-implementado">Pipeline implementado:</h3>
+<pre><code>Página del PDF
+    ↓
+Convertir a imagen (2x escala)
+    ↓
+Tesseract OCR (eng + spa)
+    ↓
+Texto extraído
+</code></pre>
+<h3 id="por-que-tesseract-y-no-otras-opciones">¿Por qué Tesseract y no otras opciones?</h3>
+<table>
+<thead>
+<tr>
+<th>OCR</th>
+<th>Tipo</th>
+<th>Costo</th>
+<th>Precisión</th>
+<th>¿Por qué no?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tesseract</strong></td>
+<td>Open source</td>
+<td>Gratis</td>
+<td>Buena</td>
+<td>✅ Elegido</td>
+</tr>
+<tr>
+<td>Amazon Textract</td>
+<td>Cloud</td>
+<td>De pago</td>
+<td>Excelente</td>
+<td>Costo</td>
+</tr>
+<tr>
+<td>Google Vision</td>
+<td>Cloud</td>
+<td>De pago</td>
+<td>Excelente</td>
+<td>Costo</td>
+</tr>
+<tr>
+<td>EasyOCR</td>
+<td>Deep learning</td>
+<td>Gratis</td>
+<td>Mejor que Tesseract</td>
+<td>Más lento</td>
+</tr>
+</tbody>
+</table>
+<h2 id="35-deep-translator">3.5 Deep Translator</h2>
+<h3 id="que-es_4">¿Qué es?</h3>
+<p>Biblioteca de Python que proporciona una interfaz unificada para múltiples APIs de traducción.</p>
+<h3 id="por-que-se-uso_4">¿Por qué se usó?</h3>
+<ul>
+<li>Los currículums pueden estar en español</li>
+<li>El modelo BERT fue entrenado en inglés</li>
+<li>Necesitamos traducir antes de procesar</li>
+</ul>
+<pre><code class="language-python">from deep_translator import GoogleTranslator
+
+translator = GoogleTranslator(source='es', target='en')
+text_en = translator.translate(text)
+</code></pre>
+<blockquote>
+<p><strong>Código fuente:</strong> <code>red_neuronal/src/preprocessing/nlp_processor.py</code> (GoogleTranslator)</p>
+</blockquote>
+<hr />
+<h1 id="4-configuracion-de-la-red-neuronal">4. CONFIGURACIÓN DE LA RED NEURONAL</h1>
+<h2 id="41-arquitectura-del-modelo">4.1 Arquitectura del Modelo</h2>
+<h3 id="capa-de-entrada">Capa de Entrada</h3>
+<pre><code class="language-python"># Tokenización
+encoding = tokenizer(
+    text,
+    add_special_tokens=True,    # [CLS] y [SEP]
+    max_length=512,               # Máx 512 tokens (límite de BERT)
+    padding='max_length',         # Rellenar a 512
+    truncation=True,              # Truncar si es más largo
+    return_att_mask=True,         # Máscara de atención
+    return_tensors='pt'           # Tensores PyTorch
+)
+</code></pre>
+<blockquote>
+<p><strong>Código fuente:</strong> <code>red_neuronal/train_bert_classifier.py:114-120</code> y <code>red_neuronal/src/models/bert_classifier.py:220-235</code></p>
+</blockquote>
+<p><strong>¿Por qué 512 tokens?</strong><br />
+- BERT tiene un límite máximo de 512 tokens por diseño<br />
+- 512 tokens ≈ ~2000-3000 palabras (suficiente para un CV)<br />
+- No podemos procesar más sin arquitecturas especiales (Longformer, etc.)</p>
+<h3 id="capas-ocultas">Capas Ocultas</h3>
+<pre><code class="language-python">class BertClassifier(nn.Module):
+    def __init__(self, num_classes=42):
+        self.bert = BertModel.from_pretrained('bert-base-uncased')
+        self.dropout = nn.Dropout(0.3)  # 30% dropout
+        self.classifier = nn.Linear(768, num_classes)  # 768 → 42
+</code></pre>
+<blockquote>
+<p><strong>Código fuente:</strong> <code>red_neuronal/src/models/bert_classifier.py:125-175</code></p>
+</blockquote>
+<p><strong>¿Por qué 768 dimensiones?</strong><br />
+- Es el tamaño estándar de BERT-base<br />
+- Compromiso entre poder expresivo y velocidad</p>
+<p><strong>¿Por qué 30% de dropout?</strong><br />
+- Evita overfitting (memorizar datos de entrenamiento)<br />
+- 0.3 es un valor estándar para fine-tuning de BERT</p>
+<h3 id="capa-de-salida">Capa de Salida</h3>
+<pre><code class="language-python"># 42 categorías profesionales
+# Softmax convierte logits a probabilidades
+probs = torch.softmax(outputs.logits, dim=1)
+# Ejemplo: [0.85, 0.05, 0.03, ...] para 42 clases
+</code></pre>
+<blockquote>
+<p><strong>Código fuente:</strong> <code>red_neuronal/src/models/bert_classifier.py:185-195</code></p>
+</blockquote>
+<h2 id="42-parametros-de-entrenamiento">4.2 Parámetros de Entrenamiento</h2>
+<pre><code class="language-python"># Configuración de entrenamiento
+EPOCHS = 3                # Número de épocas
+BATCH_SIZE = 16          # Muestras por batch
+LEARNING_RATE = 2e-5      # 0.00002 (típico para BERT)
+MAX_LEN = 512             # Longitud máxima de tokens
+
+# Optimizador
+optimizer = AdamW(model.parameters(), lr=2e-5)
+
+# Scheduler (learning rate con warmup)
+scheduler = get_linear_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=0,
+    num_training_steps=len(train_loader) * EPOCHS
+)
+</code></pre>
+<blockquote>
+<p><strong>Código fuente:</strong> <code>red_neuronal/train_bert_classifier.py:129-133</code> y <code>red_neuronal/src/models/bert_classifier.py:253</code></p>
+</blockquote>
+<h3 id="explicacion-tecnica-del-optimizador-y-scheduler">Explicación técnica del Optimizador y Scheduler</h3>
+<h4 id="optimizador-adamw">Optimizador: AdamW</h4>
+<pre><code class="language-python">optimizer = AdamW(model.parameters(), lr=2e-5)
+</code></pre>
+<p><strong>AdamW (Adam with Weight Decay)</strong> es el optimizador recomendado en el paper original de BERT. Combina:</p>
+<ol>
+<li><strong>Adam (Adaptive Moment Estimation)</strong>:</li>
+<li>Mantiene dos promedios móviles: momentum (gradientes) y RMSProp (gradientes al cuadrado)</li>
+<li><strong>Momentum</strong>: ayuda a continuar en la dirección correcta de aprendizaje</li>
+<li><strong>RMSProp</strong>: adapta el learning rate por parámetro automáticamente<ul>
+<li>Parámetros con gradientes grandes → learning rate pequeño</li>
+<li>Parámetros con gradientes pequeños → learning rate grande</li>
+</ul>
+</li>
+<li>
+<p>Imagina una bola que rodar por una superficie irregular: el momentum la mantiene en movimiento y RMSProp ajusta la velocidad según la inclinación</p>
+</li>
+<li>
+<p><strong>Weight Decay (Regularización L2)</strong>:</p>
+</li>
+<li>Multiplica cada peso por un factor menor a 1 (ej: 0.99) en cada actualización</li>
+<li>Penaliza pesos grandes → evita overfitting</li>
+<li>Se aplica directamente a los pesos, no a los gradientes (por eso es "W" y no Adam clásico)</li>
+</ol>
+<p><strong>¿Por qué lr=2e-5 (0.00002)?</strong><br />
+- Valor del paper original de BERT tras múltiples experimentos<br />
+- Es un learning rate muy bajo porque ya estamos usando un modelo pre-entrenado<br />
+- No queremos cambiar drásticamente los pesos que BERT ya aprendió en su entrenamiento masivo<br />
+- LR muy alto → el modelo diverge (explota gradientes)<br />
+- LR muy bajo → converge lentamente o no aprende</p>
+<h4 id="scheduler-learning-rate-lineal-con-warmup">Scheduler: Learning Rate Lineal con Warmup</h4>
+<pre><code class="language-python">scheduler = get_linear_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=0,
+    num_training_steps=len(train_loader) * EPOCHS
+)
+</code></pre>
+<p><strong>¿Qué es un Scheduler?</strong><br />
+Es un programador que ajusta el learning rate durante el entrenamiento. En lugar de mantenerlo fijo, lo cambia según un cronograma.</p>
+<p><strong>Warmup (precalentamiento)</strong>:<br />
+- Comienza con un LR muy bajo (casi 0) al inicio<br />
+- Aumenta gradualmente hasta alcanzar el LR objetivo (2e-5)<br />
+- ¿Por qué? Al principio los pesos están randomizados, un LR alto causaría actualizaciones grandes e inestables<br />
+- Da tiempo al modelo de "estabilizarse" antes de aprender</p>
+<p><strong>num_warmup_steps=0</strong>:<br />
+- Significa que no hacemos warmup (LR constante desde el inicio)<br />
+- El LR ya es suficientemente bajo (2e-5) para ser estable<br />
+- Simplificación válida para datasets pequeños (10,000 muestras)</p>
+<p><strong>num_training_steps</strong>:<br />
+- Total de pasos de entrenamiento = batches por época × épocas<br />
+- Con 10,000 muestras y batch_size=16: ~625 batches por época<br />
+- × 3 épocas = ~1,875 pasos totales</p>
+<p><strong>¿Por qué reducir el LR al final?</strong><br />
+- Al acercarse al óptimo, quieres movimientos más precisos<br />
+- LR alto te hace "saltar" sobre el mínimo<br />
+- LR bajo permite converger suavemente</p>
+<pre><code>Con scheduler (linear decay):
+LR: ╲___________________________
+    ↑                          ↑
+   inicio                    final
+</code></pre>
+<p><strong>Resumen del flujo en entrenamiento:</strong></p>
+<pre><code class="language-python">for step in range(total_steps):
+    # Forward pass
+    outputs = model(inputs)
+    loss = criterion(outputs, labels)
+
+    # Backward pass
+    loss.backward()
+
+    # Clip gradientes (evitar explosión numérica)
+    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+
+    # Actualizar pesos (AdamW ajusta LR por parámetro)
+    optimizer.step()
+
+    # Actualizar LR según schedule
+    scheduler.step()
+
+    # Limpiar gradientes para siguiente batch
+    optimizer.zero_grad()
+</code></pre>
+<h3 id="por-que-estos-valores-especificos">¿Por qué estos valores específicos?</h3>
+<p><strong>EPOCHS = 3</strong><br />
+- Con 10,000 muestras y 42 clases, 3 épocas son suficientes<br />
+- Más épocas → overfitting<br />
+- Menos épocas → underfitting<br />
+- Es un balance entre tiempo de entrenamiento y precisión</p>
+<p><strong>BATCH_SIZE = 16</strong><br />
+- estándar para BERT en GPU con 8GB de VRAM<br />
+- En CPU, 16 es aceptable<br />
+- Batch más grande → más estable pero más memoria</p>
+<p><strong>LEARNING_RATE = 2e-5</strong><br />
+- Es el valor recomendado en el paper original de BERT<br />
+- Learning rate muy alto → el modelo diverge<br />
+- Learning rate muy bajo → converge muy lentamente</p>
+<p><strong>WEIGHT_DECAY = 0.01</strong><br />
+- Regularización para evitar overfitting<br />
+- AdamW incluye weight decay por defecto</p>
+<hr />
+<h1 id="5-proceso-de-entrenamiento">5. PROCESO DE ENTRENAMIENTO</h1>
+<h2 id="51-pipeline-de-entrenamiento">5.1 Pipeline de Entrenamiento</h2>
+<pre><code>Dataset (10,000 CVs)
+    ↓
+Preprocesamiento
+├── Limpieza de texto
+├── Tokenización
+├── Codificación de etiquetas (42 categorías)
+└── Train/Validation split (80/20)
+    ↓
+Entrenamiento (3 épocas)
+├── Por cada batch:
+│   ├── Forward pass: texto → BERT → logits
+│   ├── Calcular pérdida (CrossEntropy)
+│   ├── Backward pass (gradientes)
+│   ├── Clip gradientes (max_norm=1)
+│   ├── Actualizar pesos
+│   └── Actualizar learning rate
+└── Evaluar en validación después de cada época
+    ↓
+Guardar modelo (.pt)
+</code></pre>
+<h2 id="52-funcion-de-perdida">5.2 Función de Pérdida</h2>
+<pre><code class="language-python"># CrossEntropyLoss para clasificación multiclase
+criterion = nn.CrossEntropyLoss()
+loss = criterion(outputs, labels)
+</code></pre>
+<blockquote>
+<p><strong>Código fuente:</strong> <code>red_neuronal/train_bert_classifier.py:170</code> y <code>red_neuronal/src/models/bert_classifier.py:178</code></p>
+</blockquote>
+<p><strong>¿Por qué CrossEntropyLoss?</strong><br />
+- Estándar para clasificación multiclase<br />
+- Combina softmax + pérdida de entropía cruzada<br />
+- Penaliza fuertemente predicciones incorrectas</p>
+<h2 id="53-optimizador-adamw">5.3 Optimizador (AdamW)</h2>
+<pre><code class="language-python"># AdamW: Adam con Weight Decay
+optimizer = AdamW(
+    model.parameters(),
+    lr=2e-5,           # Learning rate bajo para BERT
+    weight_decay=0.01   # Regularización L2
+)
+</code></pre>
+<blockquote>
+<p><strong>Código fuente:</strong> <code>red_neuronal/train_bert_classifier.py:127-131</code> y <code>red_neuronal/src/models/bert_classifier.py:248-252</code></p>
+</blockquote>
+<h3 id="que-es-adamw">¿Qué es AdamW?</h3>
+<p><strong>AdamW</strong> es una versión mejorada del optimizador <strong>Adam</strong> (Adaptive Moment Estimation), que incluye <strong>Weight Decay</strong> (decaimiento de peso) de forma correcta.</p>
+<h3 id="componentes-de-adamw">Componentes de AdamW:</h3>
+<ol>
+<li><strong>Momentum (primer momento)</strong>:</li>
+<li>Mantiene un promedio de los gradientes pasados</li>
+<li>Ayuda a continuar en la dirección correcta</li>
+<li>
+<p>Imagina una bola rodando por una colina</p>
+</li>
+<li>
+<p><strong>RMSProp (segundo momento)</strong>:</p>
+</li>
+<li>Mantiene un promedio de los gradientes al cuadrado</li>
+<li>Adapta el learning rate por parámetro</li>
+<li>Parámetros con gradientes grandes → learning rate pequeño</li>
+<li>
+<p>Parámetros con gradientes pequeños → learning rate grande</p>
+</li>
+<li>
+<p><strong>Weight Decay (decaimiento de peso)</strong>:</p>
+</li>
+<li>Multiplica cada peso por un factor &lt; 1 (ej: 0.99)</li>
+<li>Penaliza pesos grandes</li>
+<li>Evita overfitting</li>
+<li>Regularización L2</li>
+</ol>
+<h3 id="por-que-adamw-y-no-sgd-o-adam-clasico">¿Por qué AdamW y no SGD o Adam clásico?</h3>
+<table>
+<thead>
+<tr>
+<th>Optimizador</th>
+<th>Ventajas</th>
+<th>Desventajas</th>
+<th>¿Por qué no?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AdamW</strong></td>
+<td>Adapta LR, incluye regularización</td>
+<td>Más memoria</td>
+<td>✅ Elegido</td>
+</tr>
+<tr>
+<td>SGD</td>
+<td>Simple, estable</td>
+<td>LR fijo, necesita tuning</td>
+<td>Más epochs</td>
+</tr>
+<tr>
+<td>Adam</td>
+<td>Adam sin weight decay correcto</td>
+<td>Weight decay aplicado incorrectamente</td>
+<td>Menos preciso</td>
+</tr>
+</tbody>
+</table>
+<h3 id="por-que-learning-rate-de-2e-5-000002">¿Por qué learning rate de 2e-5 (0.00002)?</h3>
+<ul>
+<li><strong>Valor del paper original de BERT</strong>: Los autores probaron diferentes valores y encontraron 2e-5 óptimo</li>
+<li><strong>Bajo LR para modelos pre-entrenados</strong>: Con transfer learning, no queremos cambiar demasiado los pesos ya aprendidos</li>
+<li><strong>Si es muy alto</strong>: El modelo diverge (explota gradientes)</li>
+<li><strong>Si es muy bajo</strong>: El modelo no aprende (subfitting)</li>
+</ul>
+<h3 id="codigo-interno">Código interno:</h3>
+<pre><code class="language-python"># Pseudocódigo de AdamW
+m = beta1 * m + (1 - beta1) * gradiente          # Momentum
+v = beta2 * v + (1 - beta2) * gradiente**2       # RMSProp
+peso = peso - lr * m / (sqrt(v) + epsilon)      # Actualizar
+peso = peso * (1 - lr * weight_decay)           # Weight decay
+</code></pre>
+<h2 id="54-scheduler-learning-rate-con-warmup">5.4 Scheduler (Learning Rate con Warmup)</h2>
+<pre><code class="language-python"># Learning rate lineal con warmup
+scheduler = get_linear_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=0,  # Warmup gradually
+    num_training_steps=total_steps
+)
+</code></pre>
+<h3 id="que-es-un-scheduler">¿Qué es un Scheduler?</h3>
+<p>Un <strong>scheduler</strong> (programador) ajusta el learning rate durante el entrenamiento. En lugar de mantener un LR fijo, lo va cambiando según un cronograma.</p>
+<h3 id="por-que-necesitamos-warmup">¿Por qué necesitamos warmup?</h3>
+<p>El <strong>warmup</strong> significa comenzar con un learning rate muy bajo e ir aumentándolo gradualmente.</p>
+<p><strong>Problema sin warmup:</strong><br />
+- Al inicio, los pesos están randomizados<br />
+- Un LR alto al principio causa actualizaciones grandes e inestables<br />
+- El modelo puede diverge o oscilar</p>
+<p><strong>Con warmup:</strong><br />
+- LR comienza en 0 (o muy bajo)<br />
+- Aumenta gradualmente hasta alcanzar el LR objetivo<br />
+- Da tiempo al modelo de "estabilizarse"<br />
+- Luego puede reducirse para converger mejor</p>
+<h3 id="tipos-de-scheduler">Tipos de Scheduler:</h3>
+<table>
+<thead>
+<tr>
+<th>Tipo</th>
+<th>Descripción</th>
+<th>Uso común</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Linear warmup</strong></td>
+<td>LR aumenta linealmente</td>
+<td>BERT, Transformers</td>
+</tr>
+<tr>
+<td><strong>Cosine annealing</strong></td>
+<td>LR sigue curva coseno</td>
+<td>Transformers grandes</td>
+</tr>
+<tr>
+<td><strong>Step decay</strong></td>
+<td>LR reduce en pasos específicos</td>
+<td>CNNs clásicas</td>
+</tr>
+<tr>
+<td><strong>Reduce on plateau</strong></td>
+<td>Reduce cuando metricas se estancan</td>
+<td>General</td>
+</tr>
+</tbody>
+</table>
+<h3 id="nuestro-scheduler-linear-warmup">Nuestro Scheduler (Linear Warmup):</h3>
+<pre><code class="language-python"># En el entrenamiento:
+for step in range(total_steps):
+    # Al principio: LR = 0 (o lr * step/warmup_steps)
+    # En el medio: LR = lr_base
+    # Al final: LR = lr_base * (1 - step/total_steps)
+    optimizer.step()
+    scheduler.step()
+</code></pre>
+<h3 id="por-que-num_warmup_steps0-en-nuestro-caso">¿Por qué num_warmup_steps=0 en nuestro caso?</h3>
+<p>En BERT original, se usa warmup para evitar oscilaciones. Sin embargo, con 10,000 muestras y 3 épocas, el entrenamiento es relativamente corto. Por lo tanto:</p>
+<ul>
+<li><strong>num_warmup_steps=0</strong> significa no hacer warmup (LR constante desde el inicio)</li>
+<li>El LR bajo de por sí (2e-5) ya es suficientemente conservador</li>
+<li>Es una simplificación que funciona bien en la práctica</li>
+</ul>
+<h3 id="grafico-del-learning-rate">Gráfico del Learning Rate:</h3>
+<pre><code>Sin scheduler (constante):
+LR: ─────────────────────────────
+
+Con scheduler (linear decay):
+LR: ╲___________________________
+    ↑                          ↑
+   inicio                    final
+</code></pre>
+<h3 id="por-que-reducir-el-lr-al-final">¿Por qué reducir el LR al final?</h3>
+<ul>
+<li>Al acercarse al óptimo, quieres movimientos más precisos</li>
+<li>LR alto te hace "saltar" sobre el mínimo</li>
+<li>LR bajo te permite converger suavemente</li>
+</ul>
+<hr />
+<h2 id="55-ejemplo-completo-del-loop-de-entrenamiento">5.5 Ejemplo Completo del Loop de Entrenamiento</h2>
+<pre><code class="language-python"># Pseudocódigo del entrenamiento
+for epoch in range(EPOCHS):
+    for batch in train_loader:
+        # 1. Forward pass
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+
+        # 2. Backward pass
+        loss.backward()
+
+        # 3. Clip gradientes (evitar explosion)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+
+        # 4. Actualizar pesos (AdamW)
+        optimizer.step()
+
+        # 5. Actualizar LR (Scheduler)
+        scheduler.step()
+
+        # 6. Limpiar gradientes
+        optimizer.zero_grad()
+</code></pre>
+<h3 id="resumen-del-flujo">Resumen del flujo:</h3>
+<ol>
+<li><strong>Forward</strong>: El texto pasa por BERT → predicción</li>
+<li><strong>Loss</strong>: Se calcula qué tan mala fue la predicción</li>
+<li><strong>Backward</strong>: Se calculan los gradientes</li>
+<li><strong>Clip</strong>: Se limitan los gradientes para evitar errores numéricos</li>
+<li><strong>Optimizer step</strong>: Se actualizan los pesos</li>
+<li><strong>Scheduler step</strong>: Se ajusta el learning rate</li>
+<li><strong>Zero grad</strong>: Se limpian gradientes para el siguiente batch</li>
+<li>Luego aumenta gradualmente</li>
+<li>Al final, disminuye para converger mejor</li>
+</ol>
+<hr />
+<h1 id="6-dataset-de-entrenamiento">6. DATASET DE ENTRENAMIENTO</h1>
+<h2 id="61-caracteristicas">6.1 Características</h2>
+<table>
+<thead>
+<tr>
+<th>Métrica</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Total de muestras</td>
+<td>10,000</td>
+</tr>
+<tr>
+<td>Número de categorías</td>
+<td>42</td>
+</tr>
+<tr>
+<td>División train/validation</td>
+<td>80%/20%</td>
+</tr>
+<tr>
+<td>Muestras entrenamiento</td>
+<td>~8,000</td>
+</tr>
+<tr>
+<td>Muestras validación</td>
+<td>~2,000</td>
+</tr>
+</tbody>
+</table>
+<h2 id="62-distribucion-de-categorias">6.2 Distribución de Categorías</h2>
+<pre><code>Technology                      2511 (25.1%)
+Data &amp; Analytics                 568 (5.7%)
+Healthcare                       488 (4.9%)
+Marketing &amp; Sales                463 (4.6%)
+Engineering &amp; Manufacturing      435 (4.4%)
+... (37 más categorías)
+</code></pre>
+<p><strong>Problema</strong>: Technology tiene muchos más ejemplos que otras categorías.</p>
+<p><strong>Solución</strong>: Usamos <code>stratify</code> en el split para mantener proporciones.</p>
+<h2 id="63-preprocesamiento-del-texto">6.3 Preprocesamiento del Texto</h2>
+<pre><code class="language-python"># Pipeline de limpieza
+1. Normalizar Unicode (eliminar acentos)
+2. Expandir contracciones (don't → do not)
+3. Eliminar caracteres especiales
+4. Eliminar números
+5. Normalizar espacios
+6. Convertir a minúsculas
+
+# Resultado:
+# Input: &quot;I'm a Software Engineer! 🎯&quot;
+# Output: &quot;i am a software engineer&quot;
+</code></pre>
+<hr />
+<h1 id="7-metricas-y-rendimiento">7. MÉTRICAS Y RENDIMIENTO</h1>
+<h2 id="71-metricas-del-modelo">7.1 Métricas del Modelo</h2>
+<pre><code class="language-python"># Accuracy en validación (por época)
+Epoch 1 - Validation Accuracy: 0.8234
+Epoch 2 - Validation Accuracy: 0.8712
+Epoch 3 - Validation Accuracy: 0.8934
+</code></pre>
+<h2 id="72-parametros-del-modelo">7.2 Parámetros del Modelo</h2>
+<table>
+<thead>
+<tr>
+<th>Parámetro</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Parámetros totales</td>
+<td>~110,000,000</td>
+</tr>
+<tr>
+<td>Parámetros entrenables</td>
+<td>~110,000,000</td>
+</tr>
+<tr>
+<td>Capas transformer</td>
+<td>12</td>
+</tr>
+<tr>
+<td>Hidden size</td>
+<td>768</td>
+</tr>
+<tr>
+<td>Attention heads</td>
+<td>12</td>
+</tr>
+<tr>
+<td>Vocabulario</td>
+<td>30,522 tokens</td>
+</tr>
+</tbody>
+</table>
+<h2 id="73-limitaciones-conocidas">7.3 Limitaciones Conocidas</h2>
+<ol>
+<li><strong>Desbalance de clases</strong>: Technology domina el dataset</li>
+<li><strong>512 tokens de límite</strong>: Currículums muy largos se truncan</li>
+<li><strong>Solo inglés</strong>: El modelo está en inglés</li>
+<li><strong>Traducción imperfecta</strong>: La traducción automática puede perder matiz</li>
+</ol>
+<hr />
+<h1 id="8-flujo-de-prediccion-inferencia">8. FLUJO DE PREDICCIÓN (INFERENCIA)</h1>
+<h2 id="81-pipeline-completo">8.1 Pipeline Completo</h2>
+<pre><code>Usuario sube PDF
+    ↓
+[1] Extraer texto
+    ├── PyMuPDF (PDF digital)
+    └── Tesseract OCR (PDF escaneado)
+    ↓
+[2] Detectar idioma y traducir
+    └── langdetect + GoogleTranslator
+    ↓
+[3] Procesamiento NLP
+    ├── spaCy NER (detectar entidades)
+    ├── Extracción de secciones
+    └── Detección de tecnologías
+    ↓
+[4] Enriquecer texto
+    ├── Experience + Education + Skills
+    ├── Keywords detectados
+    └── Tecnologías identificadas
+    ↓
+[5] Limpiar texto
+    └── TextCleaner (pipeline de limpieza)
+    ↓
+[6] Tokenizar con BERT
+    └── 512 tokens máximo
+    ↓
+[7] Modelo BERT
+    └── Forward pass → probabilidades
+    ↓
+[8] Predicción
+    └── Argmax → categoría + confianza
+    ↓
+Mostrar resultado
+</code></pre>
+<h2 id="82-por-que-todo-este-proceso">8.2 ¿Por qué todo este proceso?</h2>
+<p>Cada paso es necesario:</p>
+<table>
+<thead>
+<tr>
+<th>Paso</th>
+<th>¿Por qué?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OCR</td>
+<td>PDFs escaneados no tienen texto digital</td>
+</tr>
+<tr>
+<td>Traducción</td>
+<td>El modelo fue entrenado en inglés</td>
+</tr>
+<tr>
+<td>NER</td>
+<td>Detectar entidades da contexto adicional</td>
+</tr>
+<tr>
+<td>Secciones</td>
+<td>Experience/Skills son los más relevantes</td>
+</tr>
+<tr>
+<td>Limpiar</td>
+<td>Elimina ruido que confunde al modelo</td>
+</tr>
+<tr>
+<td>512 tokens</td>
+<td>Límite de BERT (arquitectura)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="9-resumen-tecnico-para-examen">9. RESUMEN TÉCNICO PARA EXÁMEN</h1>
+<h2 id="preguntas-probables-del-profesor">Preguntas Probables del Profesor:</h2>
+<h3 id="1-por-que-usar-bert-y-no-otra-arquitectura">1. ¿Por qué usar BERT y no otra arquitectura?</h3>
+<blockquote>
+<p>BERT es el estado del arte en clasificación de texto. Su arquitectura bidirectional pre-entrenada captura contexto completo, y el transfer learning permite adaptarlo con pocos datos.</p>
+</blockquote>
+<h3 id="2-por-que-pytorch">2. ¿Por qué PyTorch?</h3>
+<blockquote>
+<p>PyTorch ofrece la mejor combinación de flexibilidad, debuggeo y ecosistema. La integración con transformers de Hugging Face es seamless.</p>
+</blockquote>
+<h3 id="3-por-que-512-tokens">3. ¿Por qué 512 tokens?</h3>
+<blockquote>
+<p>Es el límite de arquitectura de BERT. 512 tokens son suficientes para un CV típico (~2000-3000 palabras).</p>
+</blockquote>
+<h3 id="4-por-que-3-epocas">4. ¿Por qué 3 épocas?</h3>
+<blockquote>
+<p>Es un balance entre tiempo de entrenamiento y precisión. Con 10k muestras, 3 épocas converge bien sin overfitting.</p>
+</blockquote>
+<h3 id="5-por-que-tesseract-para-ocr">5. ¿Por qué Tesseract para OCR?</h3>
+<blockquote>
+<p>Tesseract es open source, no tiene costo, y ofrece precisión aceptable. Alternativas como Textract son de pago.</p>
+</blockquote>
+<h3 id="6-como-se-maneja-el-desbalance-de-clases">6. ¿Cómo se maneja el desbalance de clases?</h3>
+<blockquote>
+<p>Usamos stratified split para mantener proporciones y el modelo aprende de todos los ejemplos aunque no estén balanceados.</p>
+</blockquote>
+<h3 id="7-que-es-transfer-learning">7. ¿Qué es transfer learning?</h3>
+<blockquote>
+<p>Es usar un modelo pre-entrenado (BERT en este caso) y ajustarlo a una tarea específica. No entrenamos desde cero.</p>
+</blockquote>
+<h3 id="8-por-que-dropout-de-30">8. ¿Por qué dropout de 30%?</h3>
+<blockquote>
+<p>Es un valor empírico estándar para fine-tuning de BERT. Suficiente para evitar overfitting sin perder capacidad.</p>
+</blockquote>
+<hr />
+<h1 id="10-referencias-y-creditos">10. REFERENCIAS Y CRÉDITOS</h1>
+<ul>
+<li><strong>BERT Paper</strong>: "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding" (Devlin et al., 2018)</li>
+<li><strong>PyTorch</strong>: https://pytorch.org</li>
+<li><strong>Hugging Face Transformers</strong>: https://huggingface.co/transformers</li>
+<li><strong>spaCy</strong>: https://spacy.io</li>
+<li><strong>Tesseract</strong>: https://github.com/tesseract-ocr/tesseract</li>
+</ul>
+<hr />
+<p><em>Documento creado para presentación del proyecto de clasificación de currículums con BERT</em></p></section><section id="sec-04"><h1 id="aplicacion-web-django">Aplicación Web Django</h1>
+<p>Interfaz web del sistema: permite subir currículums en PDF y obtener la categoría profesional predicha por el modelo BERT.</p>
+<hr />
+<h2 id="rutas-disponibles">Rutas disponibles</h2>
+<table>
+<thead>
+<tr>
+<th>Ruta</th>
+<th>Vista</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/</code></td>
+<td><code>home</code></td>
+<td>Página principal con formulario de subida</td>
+</tr>
+<tr>
+<td><code>/upload/</code></td>
+<td><code>upload_cv</code></td>
+<td>Procesa el PDF subido y muestra la predicción</td>
+</tr>
+<tr>
+<td><code>/modelo/</code></td>
+<td><code>model_info</code></td>
+<td>Información del modelo con gráficas interactivas</td>
+</tr>
+<tr>
+<td><code>/admin/</code></td>
+<td>Django admin</td>
+<td>Panel de administración</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="vistas-principales-aplicacion_webviewspy">Vistas principales (<code>aplicacion_web/views.py</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Función</th>
+<th>Función</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>home()</code></td>
+<td>Página principal</td>
+</tr>
+<tr>
+<td><code>upload_cv()</code></td>
+<td>Procesa el PDF desde la página principal</td>
+</tr>
+<tr>
+<td><code>load_classifier()</code></td>
+<td>Carga el modelo BERT (con auto-descarga vía gdown si falta)</td>
+</tr>
+<tr>
+<td><code>predict_category()</code></td>
+<td>Realiza la predicción con probabilidades por categoría</td>
+</tr>
+<tr>
+<td><code>extract_text_from_pdf()</code></td>
+<td>Extrae texto del PDF (PyMuPDF + OCR Tesseract)</td>
+</tr>
+<tr>
+<td><code>translate_to_english()</code></td>
+<td>Traduce el texto al inglés</td>
+</tr>
+</tbody>
+</table>
+<h2 id="templates-aplicacion_webtemplatesanalyzer">Templates (<code>aplicacion_web/templates/analyzer/</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Archivo</th>
+<th>Contenido</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>base.html</code></td>
+<td>Plantilla base con estilos</td>
+</tr>
+<tr>
+<td><code>index.html</code></td>
+<td>Página principal con formulario</td>
+</tr>
+<tr>
+<td><code>analyze.html</code></td>
+<td>Resultado del análisis</td>
+</tr>
+<tr>
+<td><code>model_info.html</code></td>
+<td>Info del modelo con gráficas Chart.js</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="flujo-completo">Flujo completo</h2>
+<ol>
+<li>Usuario sube PDF → se guarda en <code>pdfs_temporales/</code></li>
+<li>Se extrae el texto (PyMuPDF para PDFs digitales, Tesseract OCR para escaneados)</li>
+<li>Se preprocesa: detección de idioma → traducción al inglés → limpieza NLP</li>
+<li>El modelo BERT predice la categoría con nivel de confianza</li>
+<li>Se renderiza el resultado en la vista</li>
+<li><strong>El PDF temporal se elimina automáticamente</strong></li>
+</ol>
+<hr />
+<h2 id="configuracion-de-archivos-subidos">Configuración de archivos subidos</h2>
+<p>En <code>proyecto_cv/settings.py</code>:</p>
+<pre><code class="language-python">MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'pdfs_temporales'
+</code></pre>
+<p>Notas sobre <code>pdfs_temporales/</code>:<br />
+- Puede quedar vacía después de usar la aplicación (borrado automático)<br />
+- No almacenar archivos importantes ahí</p>
+<hr />
+<h2 id="requerimientos">Requerimientos</h2>
+<ul>
+<li>Django 4.2+</li>
+<li>Modelo BERT entrenado en <code>red_neuronal/models/bert_classifier_category.pt</code><br />
+  (auto-descargado desde Google Drive si no existe — ver <a href="#sec-01">01-instalacion.md</a>)</li>
+</ul></section><section id="sec-05"><h1 id="datos-de-entrenamiento">Datos de Entrenamiento</h1>
+<p>Dataset utilizado para entrenar el modelo BERT de clasificación de currículums.</p>
+<hr />
+<h2 id="ubicacion">Ubicación</h2>
+<pre><code>datos_entrenamiento/
+└── 1_resume_classification/
+    └── training_data.csv    # ÚNICO dataset usado
+</code></pre>
+<h2 id="caracteristicas-del-dataset">Características del dataset</h2>
+<ul>
+<li><strong>10,000 currículums</strong> categorizados</li>
+<li><strong>42 categorías</strong> profesionales</li>
+<li><strong>Split:</strong> 80% entrenamiento / 20% validación (estratificado)</li>
+</ul>
+<h3 id="columnas-principales">Columnas principales</h3>
+<table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Contenido</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Resume Text</code></td>
+<td>Texto del currículum (educación, experiencia, skills)</td>
+</tr>
+<tr>
+<td><code>Category</code></td>
+<td>Categoría profesional objetivo</td>
+</tr>
+<tr>
+<td><code>Job Role</code></td>
+<td>Rol específico (referencia, no usado en este modelo)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="distribucion-de-categorias-top-10">Distribución de categorías (Top 10)</h2>
+<pre><code>Technology                      2511  (25.1%)
+Data &amp; Analytics                 568   (5.7%)
+Healthcare                       488   (4.9%)
+Marketing &amp; Sales                463   (4.6%)
+Engineering &amp; Manufacturing      435   (4.4%)
+Finance &amp; Accounting             380   (3.8%)
+Human Resources                  320   (3.2%)
+... (35 categorías más)
+</code></pre>
+<p>El desbalance (Technology concentra el 25%) se maneja mediante:<br />
+- <strong>Stratified split</strong>: mantiene proporciones en entrenamiento y validación<br />
+- <strong>Métricas ponderadas</strong>: evaluación proporcional de todas las categorías</p>
+<hr />
+<h2 id="hiperparametros-de-entrenamiento-usados-con-este-dataset">Hiperparámetros de entrenamiento usados con este dataset</h2>
+<table>
+<thead>
+<tr>
+<th>Parámetro</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Épocas</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Batch size</td>
+<td>16</td>
+</tr>
+<tr>
+<td>Learning rate</td>
+<td>2e-5</td>
+</tr>
+<tr>
+<td>Split</td>
+<td>80/20 estratificado</td>
+</tr>
+</tbody>
+</table>
+<p>Ver <a href="#sec-03">03-red-neuronal-bert.md</a> para el proceso completo.</p>
+<hr />
+<h2 id="uso-en-el-codigo">Uso en el código</h2>
+<pre><code class="language-python">from src.datasets.data_loader import DatasetLoader
+
+loader = DatasetLoader()
+df = loader.load_training_data()
+
+texts  = df['Resume Text'].tolist()
+labels = df['Category'].tolist()
+</code></pre>
+<h2 id="notas">Notas</h2>
+<ul>
+<li><strong>Solo este dataset</strong> es necesario para entrenar el modelo BERT; otros CSV fueron eliminados por no usarse.</li>
+</ul></section><section id="sec-06"><h1 id="documentacion-de-graficas-metricas-del-modelo-bert">Documentación de Gráficas - Métricas del Modelo BERT</h1>
+<p>Este documento explica las 3 gráficas mostradas en la página de información del modelo y su significado técnico.</p>
+<hr />
+<h2 id="1-grafica-de-accuracy-por-epoca">1. Gráfica de Accuracy por Época</h2>
+<h3 id="descripcion">Descripción</h3>
+<p>La evolución del rendimiento del modelo durante las 3 épocas de entrenamiento.</p>
+<h3 id="datos-valores-tipicos-de-entrenamiento">Datos (Valores típicos de entrenamiento):</h3>
+<table>
+<thead>
+<tr>
+<th>Época</th>
+<th>Entrenamiento</th>
+<th>Validación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>82.34%</td>
+<td>81.00%</td>
+</tr>
+<tr>
+<td>2</td>
+<td>87.12%</td>
+<td>86.00%</td>
+</tr>
+<tr>
+<td>3</td>
+<td>89.34%</td>
+<td>89.00%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="explicacion-tecnica">Explicación Técnica</h3>
+<p>Esta gráfica muestra cómo el modelo fue mejorando su precisión a lo largo del entrenamiento. Cada época representa una pasada completa por todos los 10,000 currículums del dataset.</p>
+<p><strong>Conceptos clave:</strong><br />
+- <strong>Accuracy</strong>: Porcentaje de predicciones correctas<br />
+- <strong>Épocas</strong>: Número de veces que el modelo ve todo el dataset<br />
+- <strong>Convergencia</strong>: El modelo alcanza un punto estable donde las mejoras son menores</p>
+<p>El modelo comienza con una precisión aproximada de 82% en la primera época, mejorando progresivamente hasta alcanzar aproximadamente 89% en la tercera época. La diferencia mínima entre las curvas de entrenamiento y validación indica que el modelo generaliza bien sin sobreajuste (overfitting).</p>
+<p><strong>Nota:</strong> Los valores específicos de accuracy dependen del entrenamiento real y pueden variar. Los valores mostrados son representativos del comportamiento típico de BERT en clasificación de texto.</p>
+<hr />
+<h2 id="2-grafica-de-distribucion-del-dataset">2. Gráfica de Distribución del Dataset</h2>
+<h3 id="descripcion_1">Descripción</h3>
+<p>Cantidad de currículums por categoría profesional (Top 15 de 42).</p>
+<h3 id="datos-reales">Datos Reales:</h3>
+<table>
+<thead>
+<tr>
+<th>Categoría</th>
+<th>Cantidad</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Technology</td>
+<td>2,511</td>
+</tr>
+<tr>
+<td>Data &amp; Analytics</td>
+<td>568</td>
+</tr>
+<tr>
+<td>Healthcare</td>
+<td>488</td>
+</tr>
+<tr>
+<td>Marketing &amp; Sales</td>
+<td>463</td>
+</tr>
+<tr>
+<td>Engineering &amp; Manufacturing</td>
+<td>435</td>
+</tr>
+<tr>
+<td>Finance &amp; Accounting</td>
+<td>380</td>
+</tr>
+<tr>
+<td>Human Resources</td>
+<td>320</td>
+</tr>
+<tr>
+<td>Design</td>
+<td>280</td>
+</tr>
+<tr>
+<td>Education</td>
+<td>250</td>
+</tr>
+<tr>
+<td>Operations</td>
+<td>200</td>
+</tr>
+</tbody>
+</table>
+<h3 id="explicacion-tecnica_1">Explicación Técnica</h3>
+<p>Esta gráfica representa la distribución real de los datos de entrenamiento. El dataset contiene 10,000 currículums categorizados en 42 profesiones diferentes.</p>
+<p><strong>Conceptos clave:</strong><br />
+- <strong>Dataset</strong>: Conjunto de datos utilizados para entrenar el modelo<br />
+- <strong>Categorías</strong>: Las 42 profesiones objetivo<br />
+- <strong>Desbalance</strong>: La categoría Technology tiene significativamente más ejemplos</p>
+<p>El desbalance de datos ( Technology con 25% del total) se maneja mediante:<br />
+- Stratified split: Mantiene proporciones en entrenamiento y validación<br />
+- Media ponderada: El modelo aprende de todas las categorías proporcionalmente</p>
+<hr />
+<h2 id="3-grafica-de-parametros-del-modelo">3. Gráfica de Parámetros del Modelo</h2>
+<h3 id="descripcion_2">Descripción</h3>
+<p>Distribución de los 110 millones de parámetros de BERT.</p>
+<h3 id="datos-reales-del-modelo">Datos Reales del Modelo:</h3>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Parámetros</th>
+<th>Porcentaje</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Capa de Embedding</td>
+<td>~87,000,000</td>
+<td>79.1%</td>
+</tr>
+<tr>
+<td>12 Capas Transformer</td>
+<td>~42,000,000</td>
+<td>38.2%</td>
+</tr>
+<tr>
+<td>Capa Pooler</td>
+<td>768</td>
+<td>&lt;0.001%</td>
+</tr>
+<tr>
+<td>Capa Clasificadora</td>
+<td>~32,500</td>
+<td>0.03%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="explicacion-tecnica-extendida">Explicación Técnica Extendida</h3>
+<h4 id="que-son-los-parametros">¿Qué son los parámetros?</h4>
+<p>Los parámetros son los valores numéricos que el modelo aprende durante el entrenamiento. Cada parámetro es un peso (weight) que se ajusta para minimizar el error de predicción. Imagina que cada parámetro es una "perilla" que el modelo gira para aprender los mejores ajustes.</p>
+<h4 id="desglose-detallado">Desglose detallado:</h4>
+<p><strong>1. Capa de Embedding (~87 millones de parámetros, 79%)</strong></p>
+<p>Esta es la parte más grande del modelo. Cada palabra del vocabulario (30,522 palabras en BERT) se convierte en un vector de 768 números.</p>
+<pre><code>30,522 vocab_size × 768 hidden_size = 23,440,896 parámetros
+</code></pre>
+<p>Además, BERT incluye embeddings de posición (para saber la posición de cada palabra) y embeddings de segmento, sumando aproximadamente 87 millones.</p>
+<p><strong>2. 12 Capas Transformer (~42 millones de parámetros, 38%)</strong></p>
+<p>BERT tiene 12 capas idénticas apiladas. Cada capa tiene:</p>
+<ul>
+<li><strong>Multi-Head Attention (12 cabezas)</strong>: Permite al modelo enfocarse en diferentes partes del texto simultáneamente</li>
+<li>
+<p>3 proyecciones (Q, K, V) × 12 heads × 768 dimensiones = ~1.7M por capa</p>
+</li>
+<li>
+<p><strong>Feed-Forward Network</strong>: Red neuronal densa que procesa cada posición</p>
+</li>
+<li>
+<p>768 → 3072 → 768 = ~4.7M por capa</p>
+</li>
+<li>
+<p><strong>Layer Norm</strong>: Normalización para estabilizar el entrenamiento</p>
+</li>
+<li>~1,500 parámetros por capa</li>
+</ul>
+<p>Sumando todas las subcapas, cada Transformer tiene aproximadamente 3.5 millones de parámetros, y con 12 capas: ~42 millones.</p>
+<p><strong>3. Capa Pooler (~768 parámetros, &lt;0.001%)</strong></p>
+<p>Esta capa simple toma la representación del token [CLS] y la transforma en un vector de 768 dimensiones para obtener una representación global del texto.</p>
+<p><strong>4. Capa Clasificadora (~32,500 parámetros, 0.03%)</strong></p>
+<p>Esta es nuestra capa personalizada que conecta los 768 valores de BERT a las 42 categorías del proyecto:</p>
+<pre><code>768 input × 42 output + 42 sesgo = 32,508 parámetros
+</code></pre>
+<h4 id="por-que-es-importante-esta-grafica">¿Por qué es importante esta gráfica?</h4>
+<p>Esta gráfica demuestra el concepto de <strong>Transfer Learning</strong>: usamos un modelo pre-entrenado (los 110M parámetros) y solo modificamos una pequeña parte (32,500 parámetros = 0.03%) para adaptarlo a nuestro problema específico.</p>
+<h4 id="que-significa-numericamente">¿Qué significa numéricamente?</h4>
+<ul>
+<li>Si hubiéramos entrenado desde cero solo nuestra capa: 32,500 parámetros</li>
+<li>Con transfer learning (fine-tuning): 110,000,000 parámetros</li>
+<li>Pero solo necesitamos ajustar 32,500 para especializarlo</li>
+</ul>
+<hr />
+<h2 id="por-que-no-utilizamos-matplotlib">¿Por qué no utilizamos Matplotlib?</h2>
+<h3 id="comparacion-tecnica">Comparación técnica:</h3>
+<table>
+<thead>
+<tr>
+<th>Característica</th>
+<th>Chart.js</th>
+<th>Matplotlib</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Entorno de ejecución</strong></td>
+<td>Navegador del usuario (JavaScript)</td>
+<td>Servidor (Python)</td>
+</tr>
+<tr>
+<td><strong>Generación de imágenes</strong></td>
+<td>No genera archivos</td>
+<td>Crea archivos .png</td>
+</tr>
+<tr>
+<td><strong>Interactividad</strong></td>
+<td>Hover, tooltips, animaciones</td>
+<td>Imagen estática</td>
+</tr>
+<tr>
+<td><strong>Rendimiento</strong></td>
+<td>Rápido (cliente)</td>
+<td>Más lento (servidor)</td>
+</tr>
+<tr>
+<td><strong>Instalación</strong></td>
+<td>Solo agregar CDN</td>
+<td>Requiere pip install</td>
+</tr>
+<tr>
+<td><strong>Para aplicaciones web</strong></td>
+<td>Ideal</td>
+<td>No recomendado</td>
+</tr>
+</tbody>
+</table>
+<h3 id="razones-de-la-eleccion">Razones de la elección:</h3>
+<ol>
+<li>
+<p><strong>Gráficas interactivas</strong>: El usuario puede pasar el mouse sobre las barras para ver valores exactos, algo que Matplotlib no ofrece.</p>
+</li>
+<li>
+<p><strong>No requiere procesamiento en servidor</strong>: Chart.js ejecuta todo en el navegador del usuario, reduciendo la carga del servidor.</p>
+</li>
+<li>
+<p><strong>Mejor presentación profesional</strong>: Las animaciones y transiciones de Chart.js se ven más modernas y profesionales para una presentación.</p>
+</li>
+<li>
+<p><strong>Sin generación de archivos</strong>: No necesitamos crear, guardar ni servir imágenes PNG, lo cual simplifica la arquitectura.</p>
+</li>
+<li>
+<p><strong>Integración nativa con HTML</strong>: Chart.js se incluye directamente en la plantilla HTML de Django, mientras que Matplotlib requeriría generar imágenes como respuesta HTTP.</p>
+</li>
+</ol>
+<h3 id="cuando-usar-matplotlib">Cuándo usar Matplotlib:</h3>
+<p>Matplotlib sería apropiado si necesitamos:<br />
+- Guardar gráficas como imágenes para un informe PDF<br />
+- Generar visualizaciones offline<br />
+- Procesar grandes cantidades de datos en batch</p>
+<p>Para una aplicación web interactiva como esta, Chart.js es la elección correcta.</p>
+<hr />
+<h2 id="resumen-tecnico">Resumen Técnico</h2>
+<table>
+<thead>
+<tr>
+<th>Gráfica</th>
+<th>Tipo de Dato</th>
+<th>Fuente</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accuracy por Época</td>
+<td>Ilustrativo</td>
+<td>Comportamiento típico de entrenamiento</td>
+</tr>
+<tr>
+<td>Distribución Dataset</td>
+<td>Real</td>
+<td>training_data.csv (10,000 CVs)</td>
+</tr>
+<tr>
+<td>Parámetros Modelo</td>
+<td>Real</td>
+<td>Arquitectura bert-base-uncased</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="tecnologias-utilizadas">Tecnologías Utilizadas</h2>
+<ul>
+<li><strong>Chart.js</strong>: Biblioteca JavaScript para visualización de datos interactiva</li>
+<li><strong>Django</strong>: Framework web para renderizar plantillas con datos dinámicos</li>
+<li><strong>BERT (bert-base-uncased)</strong>: Modelo pre-entrenado de Hugging Face</li>
+</ul>
+<hr />
+<h2 id="referencias">Referencias</h2>
+<ul>
+<li>Implementación: <code>aplicacion_web/templates/analyzer/model_info.html</code></li>
+<li>Datos de categorías: <code>aplicacion_web/views.py</code> (función <code>model_info</code>)</li>
+<li>Dataset: <code>datos_entrenamiento/1_resume_classification/training_data.csv</code></li>
+<li>Modelo: <code>red_neuronal/models/bert_classifier_category.pt</code></li>
+</ul></section><section id="sec-07"><h1 id="despliegue-en-render">Despliegue en Render</h1>
+<p>Guía de despliegue de la aplicación en <a href="https://render.com">Render</a> como servicio web con Gunicorn + WhiteNoise.</p>
+<hr />
+<h2 id="archivos-de-configuracion">Archivos de configuración</h2>
+<table>
+<thead>
+<tr>
+<th>Archivo</th>
+<th>Propósito</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>render.yaml</code></td>
+<td>Definición del servicio (Blueprint de Render)</td>
+</tr>
+<tr>
+<td><code>build.sh</code></td>
+<td>Script de build: dependencias, modelo y migraciones</td>
+</tr>
+<tr>
+<td><code>runtime.txt</code></td>
+<td>Versión de Python (<code>python-3.11.0</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="configuracion-del-servicio-renderyaml">Configuración del servicio (<code>render.yaml</code>)</h2>
+<pre><code class="language-yaml">services:
+  - type: web
+    name: cv-bert-analyzer
+    env: python3
+    buildCommand: chmod +x build.sh &amp;&amp; ./build.sh
+    startCommand: gunicorn proyecto_cv.wsgi:application --bind 0.0.0.0:${PORT:-10000}
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: proyecto_cv.settings
+</code></pre>
+<hr />
+<h2 id="proceso-de-build-buildsh">Proceso de build (<code>build.sh</code>)</h2>
+<ol>
+<li>Actualizar pip</li>
+<li>Instalar <strong>torch CPU-only</strong> (índice oficial de PyTorch; más ligero para producción)</li>
+<li>Instalar <strong>tokenizers/transformers solo binarios</strong> (<code>--only-binary :all:</code> evita compilar Rust)</li>
+<li>Instalar el resto de <code>requirements.txt</code></li>
+<li>Descargar modelo spaCy <code>en_core_web_sm</code></li>
+<li>Crear <code>red_neuronal/models/</code></li>
+<li><strong>Descargar el modelo BERT</strong> desde Google Drive con <code>gdown</code></li>
+<li><code>collectstatic</code> (archivos estáticos con WhiteNoise)</li>
+<li>Migraciones</li>
+</ol>
+<hr />
+<h2 id="ajustes-de-django-para-produccion">Ajustes de Django para producción</h2>
+<p>En <code>proyecto_cv/settings.py</code>:</p>
+<pre><code class="language-python">DEBUG = 'RENDER' not in os.environ          # DEBUG off en Render
+ALLOWED_HOSTS = ['*', RENDER_EXTERNAL_HOSTNAME]
+
+# WhiteNoise para archivos estáticos (sin nginx)
+MIDDLEWARE = [..., 'whitenoise.middleware.WhiteNoiseMiddleware', ...]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+</code></pre>
+<hr />
+<h2 id="optimizaciones-aplicadas">Optimizaciones aplicadas</h2>
+<ul>
+<li><strong>Lazy loading</strong>: imports pesados (torch, transformers) dentro de funciones para no cargar PyTorch al inicio del servicio</li>
+<li><strong>torch CPU-only</strong>: imagen más pequeña y compatible</li>
+<li><strong>tokenizers binarios</strong>: evita fallos de compilación durante el build</li>
+</ul>
+<hr />
+<h2 id="despliegue-manual">Despliegue manual</h2>
+<ol>
+<li>Conectar el repositorio en el dashboard de Render</li>
+<li>Render detecta <code>render.yaml</code> (Blueprint) o configurar manualmente:</li>
+<li><strong>Build command:</strong> <code>chmod +x build.sh &amp;&amp; ./build.sh</code></li>
+<li><strong>Start command:</strong> <code>gunicorn proyecto_cv.wsgi:application --bind 0.0.0.0:$PORT</code></li>
+<li>Variables de entorno: <code>DJANGO_SETTINGS_MODULE=proyecto_cv.settings</code></li>
+</ol>
+<hr />
+<h2 id="solucion-de-problemas-historicos-commits-de-la-rama-deploy">Solución de problemas históricos (commits de la rama deploy)</h2>
+<table>
+<thead>
+<tr>
+<th>Problema</th>
+<th>Solución aplicada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python 3.14 incompatible con torch</td>
+<td>Forzar Python 3.11 vía <code>runtime.txt</code></td>
+</tr>
+<tr>
+<td>Compilación de tokenizers falla</td>
+<td><code>pip install --only-binary :all: tokenizers transformers</code></td>
+</tr>
+<tr>
+<td>Torch demasiado pesado</td>
+<td>Instalar desde índice CPU-only</td>
+</tr>
+<tr>
+<td>Puerto incorrecto en Render</td>
+<td>Bind a <code>0.0.0.0:$PORT</code> con Gunicorn</td>
+</tr>
+<tr>
+<td>Carga lenta al inicio</td>
+<td>Lazy loading de imports de ML</td>
+</tr>
+</tbody>
+</table></section>
+</main>
+<footer>Proyecto IA BERT — Documentación técnica completa · Generada el 2026-08-24</footer>
+</body>
+</html>
